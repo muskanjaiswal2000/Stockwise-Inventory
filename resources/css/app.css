@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply antialiased;
+        background: #f6f8fc;
+        overflow-x: hidden;
+    }
+
+    ::selection {
+        @apply bg-indigo-100 text-indigo-950;
+    }
+}
+
+@layer components {
+    .inventory-card {
+        @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm transition duration-200;
+    }
+
+    .inventory-card:hover {
+        @apply shadow-md shadow-slate-200/60;
+    }
+
+    .inventory-page-heading {
+        @apply border-b border-teal-100/80 bg-gradient-to-r from-white via-white to-cyan-50/70;
+    }
+
+    .inventory-eyebrow {
+        @apply mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-teal-600;
+    }
+
+    .inventory-eyebrow::before {
+        content: '';
+        @apply h-2 w-2 rounded-full bg-teal-500 ring-4 ring-teal-100;
+    }
+
+    .overflow-x-auto {
+        scrollbar-width: thin;
+        scrollbar-color: #c7d2fe transparent;
+    }
+
+    @media (max-width: 640px) {
+        .inventory-page-heading h1 {
+            @apply text-2xl;
+        }
+
+        .inventory-page-heading > div,
+        .min-h-screen > div > div {
+            max-width: 100%;
+        }
+
+        table {
+            min-width: 680px;
+        }
+    }
+}
+
+@layer utilities {
+    /* Keep existing module actions in the StockWise teal palette. */
+    .bg-indigo-600 { background-color: #0eaaa9 !important; }
+    .bg-indigo-700 { background-color: #087f7d !important; }
+    .text-indigo-600 { color: #078b8b !important; }
+    .text-indigo-700 { color: #087f7d !important; }
+    .border-indigo-100 { border-color: #c8f1f0 !important; }
+    .shadow-indigo-200 { --tw-shadow-color: rgb(153 224 224 / 0.45) !important; }
+    .from-indigo-600 { --tw-gradient-from: #0eaaa9 var(--tw-gradient-from-position) !important; }
+    .to-violet-600 { --tw-gradient-to: #087f7d var(--tw-gradient-to-position) !important; }
+    .bg-indigo-50 { background-color: #e8fbfb !important; }
+    .text-indigo-100 { color: #d8ffff !important; }
+}
