@@ -23,6 +23,7 @@
                                     <p class="mt-1 text-xs text-slate-500">{{ $product->sku }} · {{ $product->unit }}</p>
                                 </div>
                                 <form method="POST" action="{{ route('inventory.catalog.add', [$token, $product->id]) }}">
+                                    <!-- <form method="POST" action="{{ str_replace('http://', 'https://', route('inventory.catalog.add', [$token, $product->id])) }}"> -->
                                     @csrf
                                     <button type="submit" class="shrink-0 rounded-xl bg-teal-50 px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-100">Add</button>
                                 </form>
