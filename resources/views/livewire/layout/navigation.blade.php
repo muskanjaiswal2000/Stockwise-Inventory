@@ -66,7 +66,7 @@ new class extends Component {
             @if(auth()->user()?->hasRole('admin'))
                 <a href="{{ route('inventory.staff.permissions') }}" wire:navigate
                     class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition {{ request()->routeIs('inventory.staff.*') ? 'bg-white/20 text-white ring-1 ring-white/20' : 'text-teal-50/85 hover:bg-white/10 hover:text-white' }}">
-                    <span class="flex h-5 w-5 items-center justify-center text-base leading-none">⚙</span>
+                    <span class="flex h-5 w-5 items-center justify-center text-base leading-none">♙</span>
                     Staff management
                 </a>
             @endif
@@ -81,11 +81,11 @@ new class extends Component {
                     <p class="truncate text-xs font-bold">{{ auth()->user()->name }}</p>
                     <p class="truncate text-[11px] text-teal-100/70">{{ auth()->user()->email }}</p>
                 </div>
-                <button wire:click="logout" class="ml-auto text-teal-100 hover:text-white" title="Log out" aria-label="Log out">↪</button>
+                <button wire:click="logout" class="ml-auto text-teal-100 hover:text-white" title="Log out" aria-label="Log out">➜]</button>
             </div>
             <a href="{{ route('profile') }}" wire:navigate
                 class="mt-3 block rounded-xl px-3 py-2 text-xs font-semibold text-teal-50/85 transition hover:bg-white/10 hover:text-white">
-                Edit profile and password
+                Edit profile
             </a>
         </div>
     </aside>

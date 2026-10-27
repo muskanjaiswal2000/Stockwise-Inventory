@@ -56,21 +56,21 @@ return [
     |
     */
 
-    'permissions' => [
-        'view_inventory' => 'view inventory',
-        'view_categories' => 'view categories',
-        'manage_categories' => 'manage categories',
-        'view_products' => 'view products',
-        'create_products' => 'create products',
-        'edit_products' => 'edit products',
-        'delete_products' => 'delete products',
-        'restore_products' => 'restore products',
-        'view_suppliers' => 'view suppliers',
-        'manage_suppliers' => 'manage suppliers',
-        'view_stock' => 'view stock',
-        'manage_stock' => 'manage stock',
-        'manage_staff_permissions' => 'manage staff permissions',
-    ],
+    // 'permissions' => [
+    //     'view_inventory' => 'view inventory',
+    //     'view_categories' => 'view categories',
+    //     'manage_categories' => 'manage categories',
+    //     'view_products' => 'view products',
+    //     'create_products' => 'create products',
+    //     'edit_products' => 'edit products',
+    //     'delete_products' => 'delete products',
+    //     'restore_products' => 'restore products',
+    //     'view_suppliers' => 'view suppliers',
+    //     'manage_suppliers' => 'manage suppliers',
+    //     'view_stock' => 'view stock',
+    //     'manage_stock' => 'manage stock',
+    //     'manage_staff_permissions' => 'manage staff permissions',
+    // ],
 
     'notifications' => [
         'admin_email' => env('ADMIN_NOTIFICATION_EMAIL', 'admin@gmail.com'),

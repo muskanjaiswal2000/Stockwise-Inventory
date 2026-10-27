@@ -20,7 +20,6 @@ class Movement extends Component
     public $type = 'in';
     public $quantity = 1;
     public $reason = '';
-    public array $assignments = [];
     public array $returnQuantities = [];
     public array $returnConditions = [];
     public array $returnNotes = [];
@@ -82,10 +81,15 @@ class Movement extends Component
     {
         abort_unless(auth()->user()?->can('manage stock'), 403);
 
-        QrCatalog::query()->whereNull('category_id')->firstOrCreate(
-            ['category_id' => null],
-            ['token' => (string) Str::uuid(), 'generated_by' => auth()->id()],
-        );
+        $catalog = QrCatalog::query()->whereNull('category_id')->first();
+
+        if (!$catalog) {
+            $catalog = QrCatalog::create([
+                'category_id' => null,
+                'token' => (string) Str::uuid(),
+                'generated_by' => auth()->id(),
+            ]);
+        }
 
         $this->qrGenerated = true;
         $this->showQr = true;
@@ -94,36 +98,55 @@ class Movement extends Component
     public function approveRequest(int $requestId, StockMovementService $service): void
     {
         abort_unless(auth()->user()?->can('manage stock'), 403);
-        $assignedTo = (int) ($this->assignments[$requestId] ?? 0);
-        $service->approveRequest(PurchaseRequest::findOrFail($requestId), $assignedTo);
-        session()->flash('success', 'Purchase request approved and assigned.');
+        $service->approveRequest(PurchaseRequest::findOrFail($requestId), null);
+        session()->flash('success', 'Purchase assigned successfully.');
     }
 
-    public function rejectRequest(int $requestId, StockMovementService $service): void
-    {
-        abort_unless(auth()->user()?->can('manage stock'), 403);
-        $service->rejectRequest(PurchaseRequest::findOrFail($requestId));
-        session()->flash('success', 'Purchase request rejected.');
-    }
+    // public function rejectRequest(int $requestId, StockMovementService $service): void
+    // {
+    //     abort_unless(auth()->user()?->can('manage stock'), 403);
+    //     $service->rejectRequest(PurchaseRequest::findOrFail($requestId));
+    //     session()->flash('success', 'Purchase request rejected.');
+    // }
 
-    public function issueRequest(int $requestId, StockMovementService $service): void
-    {
-        abort_unless(auth()->user()?->can('manage stock'), 403);
-        $service->issueRequest(PurchaseRequest::findOrFail($requestId));
-        session()->flash('success', 'Products purchased and stock history updated.');
-    }
+    // public function issueRequest(int $requestId, StockMovementService $service): void
+    // {
+    //     abort_unless(auth()->user()?->can('manage stock'), 403);
+    //     $service->issueRequest(PurchaseRequest::findOrFail($requestId));
+    //     session()->flash('success', 'Products purchased and stock history updated.');
+    // }
 
     public function processReturn(int $itemId, StockMovementService $service): void
     {
-        abort_unless(auth()->user()?->hasRole('admin'), 403);
-        $item = PurchaseRequestItem::findOrFail($itemId);
+        // abort_unless(auth()->user()?->hasRole('admin'), 403);
+
+        abort_unless(auth()->user()?->can('manage stock'), 403);
+        $item = \Modules\Inventory\Models\PurchaseRequestItem::findOrFail($itemId);
         $quantity = $item->issued_quantity - $item->returned_quantity;
-        $condition = $this->returnConditions[$itemId] ?? 'usable';
-        $notes = $this->returnNotes[$itemId] ?? null;
-        $service->processReturn($item, $quantity, $condition, $notes);
-        session()->flash('success', 'Return processed successfully.');
-        unset($this->returnQuantities[$itemId], $this->returnConditions[$itemId], $this->returnNotes[$itemId]);
+
+        if ($quantity < 1) {
+        session()->flash('error', 'Nothing left to return.');
+        return;
     }
+
+        $service->processReturn($item, $quantity, 'usable', null);
+        session()->flash('success', 'Product returned successfully.');
+
+        // $condition = $this->returnConditions[$itemId] ?? 'usable';
+        // $notes = $this->returnNotes[$itemId] ?? null;
+        // $service->processReturn($item, $quantity, $condition, $notes);
+        // unset($this->returnQuantities[$itemId], $this->returnConditions[$itemId], $this->returnNotes[$itemId]);
+    }
+
+    public function assignRequest(int $requestId, StockMovementService $service): void
+    {
+        abort_unless(auth()->user()?->can('manage stock'), 403);
+
+        $service->assignRequest(PurchaseRequest::findOrFail($requestId));
+
+        session()->flash('success', 'Product assigned successfully.');
+    }
+
 
     public function reviewReturn(int $returnId, StockMovementService $service): void
     {
@@ -139,6 +162,10 @@ class Movement extends Component
         $catalogUrl = $catalog ? route('inventory.catalog', $catalog->token) : null;
         $qrImageUrl = $catalog ? route('inventory.catalog.qr', $catalog->token) : null;
 
+        if ($catalog && !$this->qrGenerated) {
+            $this->qrGenerated = true;
+        }
+
         return view('inventory::livewire.stock.movement', [
             'products' => Product::orderBy('name')->get(),
             'productCount' => Product::count(),
@@ -148,7 +175,6 @@ class Movement extends Component
                 ->latest()
                 ->take(25)
                 ->get(),
-            'staffUsers' => User::role('staff')->orderBy('name')->get(),
             'catalogUrl' => $catalogUrl,
             'qrImageUrl' => $qrImageUrl,
             'qrGenerated' => $this->qrGenerated,

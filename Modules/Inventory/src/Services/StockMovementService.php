@@ -16,7 +16,6 @@ use Modules\Inventory\Models\StockMovement;
 
 class StockMovementService
 {
-
     /**
      * Perform a stock-in operation.
      */
@@ -95,7 +94,8 @@ class StockMovementService
      * Adjust the stock to a specific quantity.
      */
 
-    public function adjustToQuantity(int $productId, int $actualQuantity, ?string $reason = null, ?int $userId = null): ?StockMovement {
+    public function adjustToQuantity(int $productId, int $actualQuantity, ?string $reason = null, ?int $userId = null): ?StockMovement
+    {
         if ($actualQuantity < 0 || $actualQuantity > self::MAX_STOCK_QUANTITY) {
             throw ValidationException::withMessages([
                 'actual_quantity' => 'The counted quantity must be between 0 and 2,147,483,647.',
@@ -138,13 +138,8 @@ class StockMovementService
         return $movement;
     }
 
-    public function approveRequest(PurchaseRequest $request, int $assignedTo, ?int $userId = null): PurchaseRequest
+    public function approveRequest(PurchaseRequest $request, ?int $assignedTo, ?int $userId = null): PurchaseRequest
     {
-        $staffExists = User::role('staff')->whereKey($assignedTo)->exists();
-        if (! $staffExists) {
-            throw ValidationException::withMessages(['assignedTo' => 'Select an existing staff member.']);
-        }
-
         return DB::transaction(function () use ($request, $assignedTo, $userId) {
             $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
             if ($request->status !== 'requested') {
@@ -163,23 +158,23 @@ class StockMovementService
         });
     }
 
-    public function rejectRequest(PurchaseRequest $request, ?string $reason = null): PurchaseRequest
-    {
-        return DB::transaction(function () use ($request, $reason) {
-            $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
-            if (! in_array($request->status, ['requested', 'approved'], true)) {
-                throw ValidationException::withMessages(['request' => 'This request can no longer be rejected.']);
-            }
+    // public function rejectRequest(PurchaseRequest $request, ?string $reason = null): PurchaseRequest
+    // {
+    //     return DB::transaction(function () use ($request, $reason) {
+    //         $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
+    //         if (! in_array($request->status, ['requested', 'approved'], true)) {
+    //             throw ValidationException::withMessages(['request' => 'This request can no longer be rejected.']);
+    //         }
 
-            $request->update([
-                'status' => 'rejected',
-                'notes' => $reason ?: $request->notes,
-                'rejected_at' => now(),
-            ]);
+    //         $request->update([
+    //             'status' => 'rejected',
+    //             'notes' => $reason ?: $request->notes,
+    //             'rejected_at' => now(),
+    //         ]);
 
-            return $request;
-        });
-    }
+    //         return $request;
+    //     });
+    // }
 
     public function issueRequest(PurchaseRequest $request, ?int $userId = null): PurchaseRequest
     {
@@ -221,6 +216,66 @@ class StockMovementService
         return $request->fresh(['items.product', 'assignee']);
     }
 
+
+    public function assignRequest(PurchaseRequest $request, ?int $userId = null): PurchaseRequest
+    {
+        $movements = DB::transaction(function () use ($request, $userId) {
+            $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
+
+            if ($request->status !== 'requested') {
+                throw ValidationException::withMessages([
+                    'request' => 'Only requested items can be assigned.',
+                ]);
+            }
+
+            $movements = [];
+
+            foreach ($request->items()->lockForUpdate()->get() as $item) {
+                $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
+                $quantity = $item->requested_quantity;
+
+                if ($quantity < 1 || $product->quantity < $quantity) {
+                    throw ValidationException::withMessages([
+                        'request' => "Insufficient stock for {$product->name}.",
+                    ]);
+                }
+
+                $product->decrement('quantity', $quantity);
+
+                $item->update([
+                    'issued_quantity' => $quantity,
+                    'approved_quantity' => $quantity,
+                ]);
+
+                // Create stock movement record
+                $movements[] = StockMovement::create([
+                    'product_id' => $product->id,
+                    'user_id'    => $userId ?? auth()->id(),
+                    'type'       => 'out',
+                    'quantity'   => $quantity,
+                    'reason'     => "Assigned for request {$request->request_code}",
+                ]);
+            }
+
+            // Update request status
+            $request->update([
+                'status'      => 'assigned',
+                'assigned_to' => $userId ?? auth()->id(),
+                'approved_by' => $userId ?? auth()->id(),
+                'approved_at' => now(),
+            ]);
+
+            return $movements;
+        });
+
+        foreach ($movements as $movement) {
+            $this->notifyAboutMovement($movement);
+        }
+
+        return $request->fresh(['items.product', 'assignee']);
+    }
+
+
     public function processReturn(
         PurchaseRequestItem $item,
         int $quantity,
@@ -236,7 +291,11 @@ class StockMovementService
         $return = DB::transaction(function () use ($item, $quantity, $condition, $notes, $userId, &$movement) {
             $item = PurchaseRequestItem::query()->lockForUpdate()->findOrFail($item->id);
             $available = $item->issued_quantity - $item->returned_quantity;
-            if ($item->request()->value('status') !== 'issued' || $quantity > $available) {
+            // if ($item->request()->value('status') !== 'issued' || $quantity > $available) {
+            //     throw ValidationException::withMessages(['return' => 'The return quantity exceeds the issued quantity.']);
+            // }
+
+            if (!in_array($item->request()->value('status'), ['issued', 'assigned'], true) || $quantity > $available) {
                 throw ValidationException::withMessages(['return' => 'The return quantity exceeds the issued quantity.']);
             }
 

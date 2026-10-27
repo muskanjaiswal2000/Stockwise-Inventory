@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 class DetailsEdit extends Component
@@ -45,9 +46,10 @@ class DetailsEdit extends Component
         session()->flash('success', "Details updated for {$this->staff->name}.");
     }
 
+    #[Layout('livewire.layout.app')]
     public function render()
     {
-        return view('inventory::livewire.staff.details-edit')
-            ->layout('livewire.layout.app');
+        return view('inventory::livewire.staff.details-edit');
     }
 }
+
