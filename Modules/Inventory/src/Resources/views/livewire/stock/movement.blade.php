@@ -73,7 +73,7 @@
                     </div>
                     <div class="pointer-events-none absolute inset-x-10 top-1/2 h-0.5 animate-pulse bg-teal-300 shadow-[0_0_12px_4px_rgba(45,212,191,0.8)]"></div>
                     <p id="stockwise-scanner-message" class="mt-3 text-center text-xs text-slate-400">
-                        No camera is used. Drop the QR image into this box.
+                        <!-- No camera is used. Drop the QR image into this box. -->
                     </p>
                 </div>
             </div>
