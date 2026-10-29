@@ -44,6 +44,16 @@ class Create extends Component
         $this->redirect(route('inventory.staff.edit', $staff), navigate: true);
     }
 
+    public function continueToPermissions(): void
+    {
+        $this->validate();
+
+        $this->redirect(
+            route('inventory.staff.permissions'),
+            navigate: true
+        );
+    }
+
     public function render()
     {
         return view('inventory::livewire.staff.create')

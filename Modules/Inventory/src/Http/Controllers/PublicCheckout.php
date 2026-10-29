@@ -27,7 +27,9 @@ class PublicCheckout extends Component
         $validated = $this->validate([
             'customerName' => ['required', 'string', 'max:255'],
             'customerEmail' => ['required', 'email', 'max:255'],
-        ])->layout('livewire.layout.public');
+        ]);
+        // ->layout('livewire.layout.public');
+
 
         $cart = session()->get($this->cartKey(), []);
         if ($cart === []) {

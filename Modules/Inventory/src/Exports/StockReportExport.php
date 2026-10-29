@@ -15,8 +15,7 @@ class StockReportExport implements FromCollection, ShouldAutoSize, WithHeadings,
         private readonly ?string $dateFrom = null,
         private readonly ?string $dateTo = null,
         private readonly ?string $movementType = null,
-    ) {
-    }
+    ) {}
 
     public function collection(): Collection
     {

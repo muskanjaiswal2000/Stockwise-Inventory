@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('status')->default('pending')->change();
             $table->timestamp('processed_at')->nullable()->change();
             $table->foreign('processed_by')->references('id')->on('users')->restrictOnDelete();
-        });
+        }); 
     }
 
     public function down(): void
