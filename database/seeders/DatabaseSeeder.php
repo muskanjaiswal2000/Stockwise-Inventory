@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,12 +17,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        $superAdminRole = Role::findOrCreate('super_admin', 'web');
+        $adminUser = User::where('email', env('ADMIN_NOTIFICATION_EMAIL', 'mj6550004@gmail.com'))->first();
+        if ($adminUser) {
+            $adminUser->syncRoles([$superAdminRole]);
+        }
+
+        // user->syncRoles([$superAdminRole]);
 
         $this->call([
             RolePermissionSeeder::class,
@@ -30,4 +33,3 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
-

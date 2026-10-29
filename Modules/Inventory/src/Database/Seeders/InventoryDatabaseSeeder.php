@@ -17,6 +17,11 @@ class InventoryDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // $staffRole = Role::findOrCreate('staff', 'web');
+
+        $superAdminRole = Role::findOrCreate('super_admin', 'web');
+        $adminRole = Role::findOrCreate('admin', 'web');
+        $managerRole = Role::findOrCreate('manager', 'web');
         $staffRole = Role::findOrCreate('staff', 'web');
 
         $staffUsers = [

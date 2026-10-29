@@ -44,31 +44,31 @@ new class extends Component {
 
         <div class="space-y-1">
             @php
-                $links = [
-                    ['route' => 'dashboard', 'label' => 'Dashboard', 'pattern' => 'dashboard', 'icon' => '⌂'],
-                    ['route' => 'inventory.categories.index', 'label' => 'Categories', 'pattern' => 'inventory.categories.*', 'icon' => '◇'],
-                    ['route' => 'inventory.products.index', 'label' => 'Products', 'pattern' => 'inventory.products.*', 'icon' => '▣'],
-                    ['route' => 'inventory.suppliers.index', 'label' => 'Suppliers', 'pattern' => 'inventory.suppliers.*', 'icon' => '▱'],
-                    ['route' => 'inventory.stock.movement', 'label' => 'Stock Movement', 'pattern' => 'inventory.stock.movement', 'icon' => '↔'],
-                    ['route' => 'inventory.stock.adjustment', 'label' => 'Adjust Stock', 'pattern' => 'inventory.stock.adjustment', 'icon' => '+'],
-                    ['route' => 'inventory.stock.history', 'label' => 'Stock History', 'pattern' => 'inventory.stock.history', 'icon' => '◷'],
-                ];
+            $links = [
+            ['route' => 'dashboard', 'label' => 'Dashboard', 'pattern' => 'dashboard', 'icon' => '⌂'],
+            ['route' => 'inventory.categories.index', 'label' => 'Categories', 'pattern' => 'inventory.categories.*', 'icon' => '◇'],
+            ['route' => 'inventory.products.index', 'label' => 'Products', 'pattern' => 'inventory.products.*', 'icon' => '▣'],
+            ['route' => 'inventory.suppliers.index', 'label' => 'Suppliers', 'pattern' => 'inventory.suppliers.*', 'icon' => '▱'],
+            ['route' => 'inventory.stock.movement', 'label' => 'Stock Movement', 'pattern' => 'inventory.stock.movement', 'icon' => '↔'],
+            ['route' => 'inventory.stock.adjustment', 'label' => 'Adjust Stock', 'pattern' => 'inventory.stock.adjustment', 'icon' => '+'],
+            ['route' => 'inventory.stock.history', 'label' => 'Stock History', 'pattern' => 'inventory.stock.history', 'icon' => '◷'],
+            ];
             @endphp
 
             @foreach ($links as $link)
-                <a href="{{ route($link['route']) }}" wire:navigate
-                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition {{ request()->routeIs($link['pattern']) ? 'bg-white/20 text-white ring-1 ring-white/20' : 'text-teal-50/85 hover:bg-white/10 hover:text-white' }}">
-                    <span class="flex h-5 w-5 items-center justify-center text-base leading-none">{{ $link['icon'] }}</span>
-                    {{ $link['label'] }}
-                </a>
+            <a href="{{ route($link['route']) }}" wire:navigate
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition {{ request()->routeIs($link['pattern']) ? 'bg-white/20 text-white ring-1 ring-white/20' : 'text-teal-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex h-5 w-5 items-center justify-center text-base leading-none">{{ $link['icon'] }}</span>
+                {{ $link['label'] }}
+            </a>
             @endforeach
 
-            @if(auth()->user()?->hasRole('admin'))
-                <a href="{{ route('inventory.staff.permissions') }}" wire:navigate
-                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition {{ request()->routeIs('inventory.staff.*') ? 'bg-white/20 text-white ring-1 ring-white/20' : 'text-teal-50/85 hover:bg-white/10 hover:text-white' }}">
-                    <span class="flex h-5 w-5 items-center justify-center text-base leading-none">♙</span>
-                    Staff management
-                </a>
+            @if(auth()->user()?->hasAnyRole(['super_admin', 'admin', 'manager']))
+            <a href="{{ route('inventory.staff.permissions') }}" wire:navigate
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition {{ request()->routeIs('inventory.staff.*') ? 'bg-white/20 text-white ring-1 ring-white/20' : 'text-teal-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex h-5 w-5 items-center justify-center text-base leading-none">♙</span>
+                Staff management
+            </a>
             @endif
         </div>
 
@@ -80,6 +80,7 @@ new class extends Component {
                 <div class="min-w-0">
                     <p class="truncate text-xs font-bold">{{ auth()->user()->name }}</p>
                     <p class="truncate text-[11px] text-teal-100/70">{{ auth()->user()->email }}</p>
+                    <p class="truncate text-[10px] font-semibold text-teal-200">{{ ucfirst(auth()->user()->roles->first()?->name ?? 'Staff') }}</p>
                 </div>
                 <button wire:click="logout" class="ml-auto text-teal-100 hover:text-white" title="Log out" aria-label="Log out">➜]</button>
             </div>
@@ -93,13 +94,13 @@ new class extends Component {
     <div x-show="open" x-cloak class="border-b border-teal-900/20 bg-[#07504f] px-4 pb-4 text-white lg:hidden">
         <div class="space-y-1 pt-2">
             @foreach ($links as $link)
-                <a href="{{ route($link['route']) }}" wire:navigate @click="open = false"
-                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold {{ request()->routeIs($link['pattern']) ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="w-5 text-center">{{ $link['icon'] }}</span>{{ $link['label'] }}
-                </a>
+            <a href="{{ route($link['route']) }}" wire:navigate @click="open = false"
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold {{ request()->routeIs($link['pattern']) ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                <span class="w-5 text-center">{{ $link['icon'] }}</span>{{ $link['label'] }}
+            </a>
             @endforeach
-            @if(auth()->user()?->hasRole('admin'))
-                <a href="{{ route('inventory.staff.permissions') }}" wire:navigate @click="open = false" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-white/10"><span class="w-5 text-center">⚙</span>Staff management</a>
+            @if(auth()->user()?->hasAnyRole(['super_admin', 'admin', 'manager']))
+            <a href="{{ route('inventory.staff.permissions') }}" wire:navigate @click="open = false" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-white/10"><span class="w-5 text-center">⚙</span>Staff management</a>
             @endif
             <a href="{{ route('profile') }}" wire:navigate class="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-white/10">Profile</a>
             <button wire:click="logout" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10">Log out</button>
