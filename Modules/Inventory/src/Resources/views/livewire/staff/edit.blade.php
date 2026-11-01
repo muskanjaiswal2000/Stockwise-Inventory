@@ -13,9 +13,8 @@
         @if (session('success'))
             <div role="status" class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ session('success') }}</div>
         @endif
-        <form method="POST" action="{{ route('inventory.staff.permissions.update') }}" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <form method="POST" action="{{ route('inventory.staff.update') }}" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             @csrf
-            @method('PUT')
             <input type="hidden" name="staff_id" value="{{ $staff->id }}">
             <div class="flex flex-col gap-2 border-b border-slate-100 pb-6 sm:flex-row sm:items-end sm:justify-between"><div><h2 class="text-lg font-bold text-slate-900">Allowed actions</h2><p class="mt-1 text-sm text-slate-500">Choose which inventory pages and actions this staff member can access.</p></div><span class="w-fit rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">Staff account</span></div>
             <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

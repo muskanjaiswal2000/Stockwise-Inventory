@@ -32,10 +32,8 @@ class InventoryServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Merge all module config files
         $this->registerModuleConfigs();
 
-        // Register EventServiceProvider if exists
         $eventProvider = "Modules\\{$this->moduleName}\\Providers\\{$this->moduleName}EventServiceProvider";
         if (class_exists($eventProvider)) {
             $this->app->register($eventProvider);

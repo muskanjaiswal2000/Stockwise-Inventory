@@ -52,7 +52,7 @@ class Permissions extends Component
     public function render()
     {
         return view('inventory::livewire.staff.permissions', [
-            'staffUsers' => User::role('staff')->orderBy('name')->get(),
+            'staffUsers' => User::role(['staff', 'admin', 'manager'])->orderBy('name')->get(),
             'permissions' => Permission::query()
                 ->where('guard_name', 'web')
                 ->where('name', '!=', 'manage staff permissions')

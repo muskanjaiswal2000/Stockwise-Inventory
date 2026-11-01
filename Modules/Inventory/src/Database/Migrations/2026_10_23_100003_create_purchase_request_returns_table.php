@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('purchase_request_returns', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_request_item_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('processed_by')->constrained('users')->restrictOnDelete();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->unsignedInteger('quantity');
             $table->string('condition');
             $table->string('status')->default('accepted');

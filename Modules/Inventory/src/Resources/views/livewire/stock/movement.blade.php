@@ -54,10 +54,20 @@
                     <button type="button" wire:click="$set('showQr', false)" class="text-2xl text-slate-400 hover:text-slate-700" aria-label="Close">&times;</button>
                 </div>
 
-                <img id="stockwise-qr-image" src="{{ $qrImageUrl }}" alt="StockWise catalog QR code"
-                    draggable="true"
-                    ondragstart="event.dataTransfer.setData('text/uri-list', this.src); event.dataTransfer.setData('text/plain', this.src)"
-                    class="mx-auto mt-5 h-64 w-64 cursor-grab rounded-xl border border-slate-200 p-3">
+                <img
+    id="stockwise-qr-image"
+    src="{{ $qrImageUrl }}?v={{ time() }}"
+    alt="StockWise catalog QR code"
+    draggable="true"
+    onload="this.style.display='block'"
+    onerror="this.style.display='none'; document.getElementById('stockwise-qr-error').style.display='block'"
+    ondragstart="event.dataTransfer.setData('text/uri-list', this.src); event.dataTransfer.setData('text/plain', this.src)"
+    class="mx-auto mt-5 h-64 w-64 cursor-grab rounded-xl border border-slate-200 bg-white p-3"
+>
+
+<p id="stockwise-qr-error" style="display:none" class="mt-4 text-center text-sm text-red-600">
+    QR image could not be loaded. Please check the QR image route.
+</p>
 
                 <div class="mt-5 flex flex-wrap justify-center gap-3">
                     <button type="button" onclick="downloadStockwiseQr('{{ $qrImageUrl }}')"

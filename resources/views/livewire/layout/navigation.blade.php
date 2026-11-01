@@ -82,7 +82,12 @@ new class extends Component {
                     <p class="truncate text-[11px] text-teal-100/70">{{ auth()->user()->email }}</p>
                     <p class="truncate text-[10px] font-semibold text-teal-200">{{ ucfirst(auth()->user()->roles->first()?->name ?? 'Staff') }}</p>
                 </div>
-                <button wire:click="logout" class="ml-auto text-teal-100 hover:text-white" title="Log out" aria-label="Log out">➜]</button>
+                <form method="POST" action="{{ route('logout') }}" class="ml-auto">
+                    @csrf
+                    <button type="submit" class="text-teal-100 hover:text-white" title="Log out" aria-label="Log out">
+                        ➜]
+                    </button>
+                </form>
             </div>
             <a href="{{ route('profile') }}" wire:navigate
                 class="mt-3 block rounded-xl px-3 py-2 text-xs font-semibold text-teal-50/85 transition hover:bg-white/10 hover:text-white">
@@ -103,7 +108,12 @@ new class extends Component {
             <a href="{{ route('inventory.staff.permissions') }}" wire:navigate @click="open = false" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-white/10"><span class="w-5 text-center">⚙</span>Staff management</a>
             @endif
             <a href="{{ route('profile') }}" wire:navigate class="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-white/10">Profile</a>
-            <button wire:click="logout" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10">Log out</button>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10">
+                    Log out
+                </button>
+            </form>
         </div>
     </div>
 </nav>

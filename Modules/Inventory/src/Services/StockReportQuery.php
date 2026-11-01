@@ -7,26 +7,37 @@ use Modules\Inventory\Models\StockMovement;
 
 class StockReportQuery
 {
-    public function build(?string $dateFrom = null, ?string $dateTo = null, ?string $movementType = null): Builder
-    {
+    public function build(
+        ?string $dateFrom = null,
+        ?string $dateTo = null,
+        ?string $movementType = null
+    ): Builder {
         $query = StockMovement::query()
-            ->with(['product', 'user']);
+            ->with([
+                'product:id,name,sku,unit',
+                'user:id,name',
+            ]);
 
-        if ($dateFrom !== null && $dateFrom !== '') {
-            $query->whereDate('created_at', '>=', $dateFrom);
+        if ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
         }
 
-        if ($dateTo !== null && $dateTo !== '') {
-            $query->whereDate('created_at', '<=', $dateTo);
+        if ($dateTo) {
+            $query->where(
+                'created_at',
+                '<',
+                \Carbon\Carbon::parse($dateTo)->addDay()->startOfDay()
+            );
         }
 
         if ($movementType === 'adjustment') {
             $query->where('is_adjustment', true);
-        } elseif ($movementType === 'in' || $movementType === 'out') {
+        } elseif (in_array($movementType, ['in', 'out'], true)) {
             $query->where('is_adjustment', false)
                 ->where('type', $movementType);
         }
 
-        return $query->latest()->orderByDesc('id');
+        return $query->orderByDesc('created_at')
+            ->orderByDesc('id');
     }
 }

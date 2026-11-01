@@ -14,20 +14,28 @@ class PublicCatalog extends Component
     public function mount(string $token): void
     {
         $this->token = $token;
+
         abort_unless(QrCatalog::where('token', $token)->exists(), 404);
+
         $this->cart = session()->get($this->cartKey(), []);
     }
 
     public function add(int $productId): void
     {
         abort_unless(Product::whereKey($productId)->exists(), 404);
-        $this->cart[$productId] = min(2147483647, (int) ($this->cart[$productId] ?? 0) + 1);
+
+        $this->cart[$productId] = min(
+            2147483647,
+            (int) ($this->cart[$productId] ?? 0) + 1
+        );
+
         session()->put($this->cartKey(), $this->cart);
     }
 
     public function remove(int $productId): void
     {
         unset($this->cart[$productId]);
+
         session()->put($this->cartKey(), $this->cart);
     }
 
@@ -38,10 +46,19 @@ class PublicCatalog extends Component
         }
 
         $this->cart[$productId]--;
+
         if ($this->cart[$productId] < 1) {
             unset($this->cart[$productId]);
         }
+
         session()->put($this->cartKey(), $this->cart);
+    }
+
+    public function clearCart(): void
+    {
+        $this->cart = [];
+
+        session()->forget($this->cartKey());
     }
 
     public function render()
@@ -53,7 +70,12 @@ class PublicCatalog extends Component
                 ->orderBy('name')
                 ->get()
                 ->groupBy(fn (Product $product) => $product->category?->name ?? 'Uncategorized'),
-            'cartProducts' => Product::query()->whereIn('id', array_keys($this->cart))->get()->keyBy('id'),
+
+            'cartProducts' => Product::query()
+                ->whereIn('id', array_keys($this->cart))
+                ->get()
+                ->keyBy('id'),
+
             'cartCount' => array_sum($this->cart),
         ])->layout('livewire.layout.public');
     }

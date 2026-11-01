@@ -18,6 +18,20 @@ class Create extends Component
 
     public string $password_confirmation = '';
 
+    public function mount(): void
+    {
+        $this->authorizeStaffCreation();
+    }
+
+    private function authorizeStaffCreation(): void
+    {
+        abort_unless(
+            auth()->user()?->hasAnyRole(['super_admin', 'admin']),
+            403,
+            'Only Super Admin and Admin can create staff accounts.'
+        );
+    }
+
     protected function rules(): array
     {
         return [
@@ -29,6 +43,8 @@ class Create extends Component
 
     public function save(): void
     {
+        $this->authorizeStaffCreation();
+
         $validated = $this->validate();
 
         $staff = User::create([
@@ -37,15 +53,25 @@ class Create extends Component
             'password' => Hash::make($validated['password']),
         ]);
 
-        $staff->assignRole(Role::findOrCreate('staff', 'web'));
+        $staff->assignRole(
+            Role::findOrCreate('staff', 'web')
+        );
 
-        session()->flash('success', "Staff member {$staff->name} created.");
+        session()->flash(
+            'success',
+            "Staff member {$staff->name} created."
+        );
 
-        $this->redirect(route('inventory.staff.edit', $staff), navigate: true);
+        $this->redirect(
+            route('inventory.staff.edit', $staff),
+            navigate: true
+        );
     }
 
     public function continueToPermissions(): void
     {
+        $this->authorizeStaffCreation();
+
         $this->validate();
 
         $this->redirect(
