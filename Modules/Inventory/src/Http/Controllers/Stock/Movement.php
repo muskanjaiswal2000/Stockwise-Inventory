@@ -89,13 +89,6 @@ class Movement extends Component
         $this->showQr = true;
     }
 
-    public function approveRequest(int $requestId, StockMovementService $service): void
-    {
-        abort_unless(auth()->user()?->can('manage stock'), 403);
-        $service->approveRequest(PurchaseRequest::findOrFail($requestId), null);
-        session()->flash('success', 'Purchase assigned successfully.');
-    }
-
     public function processReturn(int $itemId, StockMovementService $service): void
     {
         abort_unless(auth()->user()?->can('manage stock'), 403);

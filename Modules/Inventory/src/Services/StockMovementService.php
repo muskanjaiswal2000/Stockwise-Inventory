@@ -136,26 +136,6 @@ class StockMovementService
         return $movement;
     }
 
-    public function approveRequest(PurchaseRequest $request, ?int $assignedTo, ?int $userId = null): PurchaseRequest
-    {
-        return DB::transaction(function () use ($request, $assignedTo, $userId) {
-            $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
-            if ($request->status !== 'requested') {
-                throw ValidationException::withMessages(['request' => 'Only requested purchases can be approved.']);
-            }
-
-            $request->items()->update(['approved_quantity' => DB::raw('requested_quantity')]);
-            $request->update([
-                'assigned_to' => $assignedTo,
-                'approved_by' => $userId ?? auth()->id(),
-                'approved_at' => now(),
-                'status' => 'approved',
-            ]);
-
-            return $request->fresh(['items.product', 'assignee']);
-        });
-    }
-
     public function issueRequest(PurchaseRequest $request, ?int $userId = null): PurchaseRequest
     {
         $movements = DB::transaction(function () use ($request, $userId) {
