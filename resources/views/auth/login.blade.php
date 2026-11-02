@@ -186,26 +186,6 @@
                     </button>
 
                 </form>
-
-                <!-- Security information -->
-                <div class="mt-7 border-t border-slate-100 pt-5">
-
-                    <div class="flex items-center justify-center gap-2 text-xs text-slate-400">
-
-                        <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4" />
-                        </svg>
-
-                        Your account and inventory data are protected.
-
-                    </div>
-
-                </div>
-
             </div>
 
             <!-- Footer -->
