@@ -1,3 +1,4 @@
+
 <main class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
 
     <header class="mb-6 rounded-2xl bg-gradient-to-r from-[#0d7771] to-[#08a5ad] p-6 text-white shadow-lg shadow-teal-200">
@@ -42,6 +43,26 @@
                                 <p class="mt-1 text-xs text-slate-500">
                                     {{ $product->sku }} · {{ $product->unit }}
                                 </p>
+
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                    <span class="text-xs font-semibold text-slate-600">
+                                        Available: {{ $product->quantity }} {{ $product->unit }}
+                                    </span>
+
+                                    @if ($product->quantity <= 0)
+                                        <span class="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700">
+                                            Out of Stock
+                                        </span>
+                                    @elseif ($product->quantity <= $product->reorder_level)
+                                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                                            Low Stock
+                                        </span>
+                                    @else
+                                        <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
+                                            In Stock
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="shrink-0">
@@ -52,7 +73,8 @@
 
                                         {{-- Decrease quantity --}}
                                         <form method="POST"
-                                            action="{{ route('inventory.catalog.decrement', [$token, $product->id]) }}">
+                                            action="{{ route('inventory.catalog.decrement', [$token, $product->id]) }}"
+                                            class="catalog-cart-form">
                                             @csrf
 
                                             <button type="submit"
@@ -67,7 +89,8 @@
 
                                         {{-- Increase quantity --}}
                                         <form method="POST"
-                                            action="{{ route('inventory.catalog.add', [$token, $product->id]) }}">
+                                            action="{{ route('inventory.catalog.add', [$token, $product->id]) }}"
+                                            class="catalog-cart-form">
                                             @csrf
 
                                             <button type="submit"
@@ -82,7 +105,8 @@
 
                                     {{-- Add product --}}
                                     <form method="POST"
-                                        action="{{ route('inventory.catalog.add', [$token, $product->id]) }}">
+                                        action="{{ route('inventory.catalog.add', [$token, $product->id]) }}"
+                                        class="catalog-cart-form">
                                         @csrf
 
                                         <button type="submit"
@@ -128,7 +152,8 @@
 
                     {{-- Clear cart --}}
                     <form method="POST"
-                        action="{{ route('inventory.catalog.clear', $token) }}">
+                        action="{{ route('inventory.catalog.clear', $token) }}"
+                        class="catalog-cart-form">
                         @csrf
 
                         <button type="submit"
@@ -149,3 +174,28 @@
     </aside>
 
 </main>
+
+{{-- Preserve catalog scroll position after cart form submission --}}
+<script>
+    (function () {
+        const storageKey = 'stockwise_catalog_scroll';
+
+        // Restore the previous scroll position after the page reloads.
+        const savedPosition = sessionStorage.getItem(storageKey);
+
+        if (savedPosition !== null) {
+            sessionStorage.removeItem(storageKey);
+
+            window.addEventListener('load', function () {
+                window.scrollTo(0, Number(savedPosition));
+            }, { once: true });
+        }
+
+        // Save the current position before submitting cart forms.
+        document.querySelectorAll('.catalog-cart-form').forEach(function (form) {
+            form.addEventListener('submit', function () {
+                sessionStorage.setItem(storageKey, String(window.scrollY));
+            });
+        });
+    })();
+</script>
