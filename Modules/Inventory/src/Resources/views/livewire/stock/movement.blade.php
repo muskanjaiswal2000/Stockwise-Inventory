@@ -129,7 +129,6 @@
                                     <th class="pb-2 pr-4">Requested</th>
                                     <th class="pb-2 pr-4">Assigned</th>
                                     <th class="pb-2 pr-4">Returned</th>
-                                    <!-- <th class="pb-2">Action</th> -->
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
