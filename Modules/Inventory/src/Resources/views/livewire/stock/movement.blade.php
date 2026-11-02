@@ -81,86 +81,103 @@
                         Drag the QR image here to scan
                     </div>
                     <div class="pointer-events-none absolute inset-x-10 top-1/2 h-0.5 animate-pulse bg-teal-300 shadow-[0_0_12px_4px_rgba(45,212,191,0.8)]"></div>
-                    <p id="stockwise-scanner-message" class="mt-3 text-center text-xs text-slate-400">
-                        <!-- No camera is used. Drop the QR image into this box. -->
-                    </p>
+                    <p id="stockwise-scanner-message" class="mt-3 text-center text-xs text-slate-400"></p>
                 </div>
             </div>
         </div>
         @endif
 
-        {{-- Request History --}}
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="border-b border-slate-100 px-6 py-5">
-                <h2 class="font-semibold text-slate-900">Request history</h2>
-                <p class="mt-1 text-sm text-slate-500">Users, products and assignment status.</p>
-            </div>
+        
+{{-- Request History --}}
+<section class="overflow-hidden rounded-2xl bg-white shadow-sm">
+    <div class="px-6 py-5">
+        <h2 class="font-semibold text-slate-900">Request history</h2>
+        <p class="mt-1 text-sm text-slate-500">Users, products and assignment status.</p>
+    </div>
 
-            <div class="divide-y divide-slate-100">
-                @forelse ($purchaseRequests as $purchaseRequest)
-                <article class="p-6" wire:key="pr-{{ $purchaseRequest->id }}">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="font-bold text-slate-900">{{ $purchaseRequest->request_code }}</h3>
-                                <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold capitalize text-teal-700">
-                                    {{ ucfirst($purchaseRequest->status) }}
-                                </span>
-                            </div>
-                            <p class="mt-1 text-sm text-slate-500">
-                                {{ $purchaseRequest->customer_name }} · {{ $purchaseRequest->customer_email }} ·
-                                {{ $purchaseRequest->created_at->format('M j, Y g:i A') }}
-                            </p>
-                        </div>
+    <div>
+        @forelse ($purchaseRequests as $purchaseRequest)
+        <article class="border-b border-slate-100 p-6 last:border-0" wire:key="pr-{{ $purchaseRequest->id }}">
 
-                        @if ($purchaseRequest->status === 'requested')
-                        <button type="button" wire:click="assignRequest({{ $purchaseRequest->id }})"
-                            class="rounded-lg bg-teal-600 px-4 py-2 text-xs font-bold text-white">
-                            Assign
-                        </button>
-                        @endif
+            {{-- Customer Details: unchanged --}}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="font-bold text-slate-900">{{ $purchaseRequest->request_code }}</h3>
+                        <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold capitalize text-teal-700">
+                            {{ ucfirst($purchaseRequest->status) }}
+                        </span>
                     </div>
 
-                    <div class="mt-4 overflow-x-auto">
-                        <table class="min-w-full text-left text-xs">
-                            <thead class="text-[10px] uppercase tracking-wide text-slate-400">
-                                <tr>
-                                    <th class="pb-2 pr-4">Product</th>
-                                    <th class="pb-2 pr-4">Requested</th>
-                                    <th class="pb-2 pr-4">Assigned</th>
-                                    <th class="pb-2 pr-4">Returned</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @foreach ($purchaseRequest->items as $item)
-                                <tr>
-                                    <td class="py-3 pr-4 font-semibold text-slate-800">
-                                        {{ $item->product?->name ?? 'N/A' }}
-                                        <span class="text-slate-400">({{ $item->product?->sku }})</span>
-                                    </td>
-                                    <td class="py-3 pr-4">{{ $item->requested_quantity }}</td>
-                                    <td class="py-3 pr-4">{{ $item->issued_quantity }}</td>
-                                    <td class="py-3 pr-4">{{ $item->returned_quantity }}</td>
-                                    <td class="py-3">
-                                        @if ($item->issued_quantity > $item->returned_quantity)
-                                        <button type="button" wire:click="processReturn({{ $item->id }})"
-                                            class="rounded-lg bg-teal-600 px-3 py-1.5 text-[10px] font-bold text-white">
-                                            Return product
-                                        </button>
-                                        @else
-                                        <span class="text-slate-400">—</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-                @empty
-                <p class="p-6 text-sm text-slate-500">No purchase requests yet.</p>
-                @endforelse
+                    <p class="mt-1 text-sm text-slate-500">
+                        {{ $purchaseRequest->customer_name }} · {{ $purchaseRequest->customer_email }} ·
+                        {{ $purchaseRequest->created_at->format('M j, Y g:i A') }}
+                    </p>
+                </div>
+
+                @if ($purchaseRequest->status === 'requested')
+                <button type="button" wire:click="assignRequest({{ $purchaseRequest->id }})"
+                    class="rounded-lg bg-teal-600 px-4 py-2 text-xs font-bold text-white">
+                    Assign
+                </button>
+                @endif
             </div>
-        </section>
+
+            {{-- Product Table: corrected column structure --}}
+            <div class="mt-5 overflow-x-auto">
+                <table class="w-full min-w-[700px] table-fixed text-left text-xs">
+
+                    <colgroup>
+                        <col style="width: 40%">
+                        <col style="width: 13%">
+                        <col style="width: 13%">
+                        <col style="width: 13%">
+                        <col style="width: 21%">
+                    </colgroup>
+
+                    <thead class="text-[10px] uppercase tracking-wide text-slate-400">
+                        <tr>
+                            <th class="pb-3 pr-4 font-medium">Product</th>
+                            <th class="pb-3 pr-4 font-medium">Requested</th>
+                            <th class="pb-3 pr-4 font-medium">Assigned</th>
+                            <th class="pb-3 pr-4 font-medium">Returned</th>
+                            <th class="pb-3 text-center font-medium">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($purchaseRequest->items as $item)
+                        <tr>
+                            <td class="py-4 pr-4 font-semibold text-slate-800">
+                                {{ $item->product?->name ?? 'N/A' }}
+                                <span class="text-slate-400">({{ $item->product?->sku }})</span>
+                            </td>
+
+                            <td class="py-4 pr-4">{{ $item->requested_quantity }}</td>
+                            <td class="py-4 pr-4">{{ $item->issued_quantity }}</td>
+                            <td class="py-4 pr-4">{{ $item->returned_quantity }}</td>
+
+                            <td class="py-3 text-center">
+                                @if ($item->issued_quantity > $item->returned_quantity)
+                                <button type="button"
+                                    wire:click="processReturn({{ $item->id }})"
+                                    class="whitespace-nowrap rounded-lg bg-teal-600 px-3 py-1.5 text-[10px] font-bold text-white hover:bg-teal-700">
+                                    Return product
+                                </button>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+        </article>
+        @empty
+        <p class="p-6 text-sm text-slate-500">No purchase requests yet.</p>
+        @endforelse
+    </div>
+</section>
+
     </div>
 </div>
