@@ -53,49 +53,19 @@
                     <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600">
 
                         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-
                         SECURE LOGIN
-
                     </div>
 
                     <h2 class="text-2xl font-bold tracking-tight text-slate-900">
                         Welcome back!
                     </h2>
-
                     <p class="mt-2 text-sm leading-6 text-slate-500">
                         Sign in to your account to manage your inventory and business operations.
                     </p>
-
                 </div>
 
-                <!-- Validation errors -->
-                @if ($errors->any())
-
-                    <div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
-
-                        <div class="flex items-start gap-3">
-
-                            <div class="mt-0.5 text-red-500">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v4m0 4h.01M10.3 3.86l-8.1 14A2 2 0 004 21h16a2 2 0 001.8-3.14l-8-14a2 2 0 00-3.5 0z" />
-                                </svg>
-                            </div>
-
-                            <div class="text-sm text-red-700">
-                                @foreach ($errors->all() as $error)
-                                    <p>{{ $error }}</p>
-                                @endforeach
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                @endif
-
                 <!-- Login form -->
-                <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
+                <form method="POST" action="{{ route('login.store') }}" class="space-y-5" novalidate>
 
                     @csrf
 
@@ -129,6 +99,9 @@
                                 class="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
 
                         </div>
+                        @error('email')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
 
                     </div>
 
@@ -146,12 +119,10 @@
                         <div class="relative">
 
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
                                         d="M7 10V7a5 5 0 0110 0v3m-11 0h12a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2zm5 4v4" />
                                 </svg>
-
                             </div>
 
                             <input
@@ -164,6 +135,9 @@
                                 class="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
 
                         </div>
+                        @error('password')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
 
                     </div>
 
@@ -187,10 +161,10 @@
 
                         @if (Route::has('password.request'))
 
-                            <a href="{{ route('password.request') }}"
-                                class="text-sm font-semibold text-indigo-600 transition hover:text-indigo-800">
-                                Forgot password?
-                            </a>
+                        <a href="{{ route('password.request') }}"
+                            class="text-sm font-semibold text-indigo-600 transition hover:text-indigo-800">
+                            Forgot password?
+                        </a>
 
                         @endif
 

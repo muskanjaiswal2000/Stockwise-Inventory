@@ -17,7 +17,8 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeVolt('pages.auth.login');
+            ->assertSee('name="email"', false)
+            ->assertSee('name="password"', false);
     }
 
     public function test_homepage_redirects_to_the_login_screen(): void
