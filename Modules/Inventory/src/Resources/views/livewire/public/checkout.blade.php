@@ -9,7 +9,15 @@
                 <div class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">Your request <strong>{{ session('request_code') }}</strong> has been submitted.</div>
             @endif
 
-            @error('cart') <p class="mt-4 text-sm text-rose-600">{{ $message }}</p> @enderror
+            @if ($errors->has('cart'))
+    <div class="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <p class="mb-2 font-bold">Insufficient stock</p>
+
+        @foreach ($errors->get('cart') as $error)
+            <p class="mt-1">{{ $error }}</p>
+        @endforeach
+    </div>
+@endif
             <div class="mt-6 space-y-4">
                 @foreach ($cartProducts as $product)
                     <div class="flex justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"><span class="font-semibold text-slate-800">{{ $product->name }}</span><span>{{ $cart[$product->id] }} {{ $product->unit }}</span></div>

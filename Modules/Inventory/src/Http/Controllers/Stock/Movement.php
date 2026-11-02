@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\QrCatalog;
 use Modules\Inventory\Models\PurchaseRequest;
@@ -14,12 +15,21 @@ use Modules\Inventory\Services\StockMovementService;
 
 class Movement extends Component
 {
+    use WithPagination;
+
+    public string $sortOrder = 'latest';
+
     public $product_id = '';
     public $type = 'in';
     public $quantity = 1;
     public $reason = '';
     public bool $showQr = false;
     public bool $qrGenerated = false;
+
+    public function updatedSortOrder(): void
+    {
+        $this->resetPage();
+    }
 
     public function mount(Request $request): void
     {
@@ -132,9 +142,12 @@ class Movement extends Component
             'totalQuantity' => Product::sum('quantity'),
             'purchaseRequests' => PurchaseRequest::query()
                 ->with(['items.product', 'items.returns', 'assignee', 'submittedBy'])
-                ->latest()
-                ->take(25)
-                ->get(),
+                ->when(
+                    $this->sortOrder === 'oldest',
+                    fn($query) => $query->orderBy('created_at')->orderBy('id'),
+                    fn($query) => $query->orderByDesc('created_at')->orderByDesc('id')
+                )
+                ->paginate(10),
             'catalogUrl' => $catalogUrl,
             'qrImageUrl' => $qrImageUrl,
             'qrGenerated' => $this->qrGenerated,

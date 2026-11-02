@@ -23,17 +23,63 @@ class PublicCheckoutSubmit
         ]);
 
         $key = 'catalog_cart_' . $token;
-        $cart = session()->get($key, []);
+        $cart = $request->session()->get($key, []);
+
         if ($cart === []) {
-            return back()->withErrors(['cart' => 'Select at least one product before checkout.']);
+            return back()->withErrors([
+                'cart' => 'Select at least one product before checkout.',
+            ]);
         }
 
         $purchaseRequest = DB::transaction(function () use ($validated, $cart) {
-            $products = Product::query()->whereIn('id', array_keys($cart))->lockForUpdate()->get()->keyBy('id');
+
+            $products = Product::query()
+                ->whereIn('id', array_keys($cart))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
             if ($products->count() !== count($cart)) {
-                throw ValidationException::withMessages(['cart' => 'One or more selected products are no longer available.']);
+                throw ValidationException::withMessages([
+                    'cart' => 'One or more selected products are no longer available.',
+                ]);
             }
 
+            // Validate all quantities and available stock before creating the request.
+            $stockErrors = [];
+            $validatedCart = [];
+
+            foreach ($cart as $productId => $quantity) {
+
+                $quantity = filter_var($quantity, FILTER_VALIDATE_INT);
+
+                if ($quantity === false || $quantity < 1) {
+                    throw ValidationException::withMessages([
+                        'cart' => 'Every product quantity must be at least one.',
+                    ]);
+                }
+
+                $product = $products->get((int) $productId);
+
+                if ($quantity > $product->quantity) {
+                    $stockErrors[] = sprintf(
+                        '%s: Only %d units are currently available. You requested %d. Please reduce the quantity to %d or less.',
+                        $product->name,
+                        $product->quantity,
+                        $quantity,
+                        $product->quantity
+                    );
+                }
+
+                $validatedCart[$productId] = $quantity;
+            }
+
+            if (! empty($stockErrors)) {
+                throw ValidationException::withMessages([
+                    'cart' => $stockErrors,
+                ]);
+            }
+            
             $purchaseRequest = PurchaseRequest::create([
                 'request_code' => 'PR-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6)),
                 'customer_name' => $validated['customerName'],
@@ -42,12 +88,7 @@ class PublicCheckoutSubmit
                 'status' => 'requested',
             ]);
 
-            foreach ($cart as $productId => $quantity) {
-                $quantity = filter_var($quantity, FILTER_VALIDATE_INT);
-                if (! $quantity || $quantity < 1) {
-                    throw ValidationException::withMessages(['cart' => 'Every product quantity must be at least one.']);
-                }
-
+            foreach ($validatedCart as $productId => $quantity) {
                 $purchaseRequest->items()->create([
                     'product_id' => $products->get((int) $productId)->id,
                     'requested_quantity' => $quantity,
@@ -57,12 +98,9 @@ class PublicCheckoutSubmit
             return $purchaseRequest;
         });
 
-        if (! $purchaseRequest) {
-            return back()->withErrors(['cart' => 'One or more selected products are no longer available.']);
-        }
+        $request->session()->forget($key);
 
-        session()->forget($key);
-        session()->put([
+        $request->session()->put([
             'last_request_code' => $purchaseRequest->request_code,
             'last_customer_email' => $purchaseRequest->customer_email,
         ]);
