@@ -5,7 +5,6 @@ namespace Modules\Inventory\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 use Modules\Inventory\Events\LowStockDetected;
 use Modules\Inventory\Events\StockMovementRecorded;
 use Modules\Inventory\Models\Product;
@@ -37,7 +36,6 @@ class StockMovementService
                     'quantity' => 'This stock increase exceeds the maximum supported quantity.',
                 ]);
             }
-
             $product->quantity += $quantity;
             $product->save();
 
@@ -158,24 +156,6 @@ class StockMovementService
         });
     }
 
-    // public function rejectRequest(PurchaseRequest $request, ?string $reason = null): PurchaseRequest
-    // {
-    //     return DB::transaction(function () use ($request, $reason) {
-    //         $request = PurchaseRequest::query()->lockForUpdate()->findOrFail($request->id);
-    //         if (! in_array($request->status, ['requested', 'approved'], true)) {
-    //             throw ValidationException::withMessages(['request' => 'This request can no longer be rejected.']);
-    //         }
-
-    //         $request->update([
-    //             'status' => 'rejected',
-    //             'notes' => $reason ?: $request->notes,
-    //             'rejected_at' => now(),
-    //         ]);
-
-    //         return $request;
-    //     });
-    // }
-
     public function issueRequest(PurchaseRequest $request, ?int $userId = null): PurchaseRequest
     {
         $movements = DB::transaction(function () use ($request, $userId) {
@@ -247,17 +227,15 @@ class StockMovementService
                     'approved_quantity' => $quantity,
                 ]);
 
-                // Create stock movement record
                 $movements[] = StockMovement::create([
                     'product_id' => $product->id,
                     'user_id'    => $userId ?? auth()->id(),
                     'type'       => 'out',
                     'quantity'   => $quantity,
-                    'reason'     => "Assigned for request {$request->request_code}",
+                    'reason'     => 'Issued for purchase request',
                 ]);
             }
 
-            // Update request status
             $request->update([
                 'status'      => 'assigned',
                 'assigned_to' => $userId ?? auth()->id(),
@@ -279,139 +257,68 @@ class StockMovementService
     public function processReturn(
         PurchaseRequestItem $item,
         int $quantity,
-        string $condition,
         ?string $notes = null,
         ?int $userId = null,
     ): PurchaseRequestReturn {
-        if ($quantity < 1 || ! in_array($condition, ['usable', 'damaged'], true)) {
-            throw ValidationException::withMessages(['return' => 'Enter a valid return quantity and condition.']);
+        if ($quantity < 1) {
+            throw ValidationException::withMessages([
+                'return' => 'Enter a valid return quantity.',
+            ]);
         }
 
         $movement = null;
-        $return = DB::transaction(function () use ($item, $quantity, $condition, $notes, $userId, &$movement) {
-            $item = PurchaseRequestItem::query()->lockForUpdate()->findOrFail($item->id);
+
+        $return = DB::transaction(function () use ($item, $quantity, $notes, $userId, &$movement) {
+            $item = PurchaseRequestItem::query()
+                ->lockForUpdate()
+                ->findOrFail($item->id);
+
+            $request = $item->request;
             $available = $item->issued_quantity - $item->returned_quantity;
-            // if ($item->request()->value('status') !== 'issued' || $quantity > $available) {
-            //     throw ValidationException::withMessages(['return' => 'The return quantity exceeds the issued quantity.']);
-            // }
 
-            if (!in_array($item->request()->value('status'), ['issued', 'assigned'], true) || $quantity > $available) {
-                throw ValidationException::withMessages(['return' => 'The return quantity exceeds the issued quantity.']);
-            }
-
-            if ($condition === 'usable') {
-                $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
-                if ($quantity > self::MAX_STOCK_QUANTITY - $product->quantity) {
-                    throw ValidationException::withMessages(['return' => 'The returned quantity exceeds stock capacity.']);
-                }
-                $product->increment('quantity', $quantity);
-                $movement = StockMovement::create([
-                    'product_id' => $product->id,
-                    'user_id' => $userId ?? auth()->id(),
-                    'type' => 'in',
-                    'quantity' => $quantity,
-                    'reason' => "Usable return for purchase request {$item->request->request_code}",
+            if (! in_array($request->status, ['issued', 'assigned'], true) || $quantity > $available) {
+                throw ValidationException::withMessages([
+                    'return' => 'The return quantity exceeds the issued quantity.',
                 ]);
             }
 
+            $product = Product::query()
+                ->lockForUpdate()
+                ->findOrFail($item->product_id);
+
+            if ($quantity > self::MAX_STOCK_QUANTITY - $product->quantity) {
+                throw ValidationException::withMessages([
+                    'return' => 'The returned quantity exceeds stock capacity.',
+                ]);
+            }
+
+            $product->increment('quantity', $quantity);
+
+            $movement = StockMovement::create([
+                'product_id' => $product->id,
+                'user_id' => $userId ?? auth()->id(),
+                'type' => 'in',
+                'quantity' => $quantity,
+                'reason' => "Returned for purchase request {$request->request_code}",
+            ]);
+
             $item->increment('returned_quantity', $quantity);
+
             $return = PurchaseRequestReturn::create([
                 'purchase_request_item_id' => $item->id,
                 'processed_by' => $userId ?? auth()->id(),
                 'quantity' => $quantity,
-                'condition' => $condition,
-                'status' => $condition === 'usable' ? 'accepted' : 'rejected',
+                'condition' => 'usable',
+                'status' => 'accepted',
                 'notes' => $notes,
                 'processed_at' => now(),
             ]);
 
-            if ($item->request->items()->whereColumn('returned_quantity', '<', 'issued_quantity')->doesntExist()) {
-                $item->request->update(['status' => 'completed']);
-            }
-
-            return $return;
-        });
-
-        if ($movement !== null) {
-            $this->notifyAboutMovement($movement);
-        }
-
-        return $return;
-    }
-
-    public function submitReturn(PurchaseRequestItem $item, int $quantity, ?string $notes = null): PurchaseRequestReturn
-    {
-        if ($quantity < 1) {
-            throw ValidationException::withMessages(['return' => 'Enter a valid return quantity.']);
-        }
-
-        return DB::transaction(function () use ($item, $quantity, $notes) {
-            $item = PurchaseRequestItem::query()->lockForUpdate()->findOrFail($item->id);
-            $available = $item->issued_quantity - $item->returned_quantity - $item->returns()->where('status', 'pending')->sum('quantity');
-            if ($item->request()->value('status') !== 'issued' || $quantity > $available) {
-                throw ValidationException::withMessages(['return' => 'The return quantity exceeds the remaining issued quantity.']);
-            }
-
-            return PurchaseRequestReturn::create([
-                'purchase_request_item_id' => $item->id,
-                'processed_by' => null,
-                'quantity' => $quantity,
-                'condition' => 'pending',
-                'status' => 'pending',
-                'notes' => $notes,
-                'processed_at' => null,
-            ]);
-        });
-    }
-
-    public function reviewReturn(
-        PurchaseRequestReturn $return,
-        string $condition,
-        ?string $notes = null,
-        ?int $userId = null,
-    ): PurchaseRequestReturn {
-        if (! in_array($condition, ['usable', 'damaged'], true)) {
-            throw ValidationException::withMessages(['return' => 'Choose whether the returned item is usable or damaged.']);
-        }
-
-        $movement = null;
-        $return = DB::transaction(function () use ($return, $condition, $notes, $userId, &$movement) {
-            $return = PurchaseRequestReturn::query()->lockForUpdate()->findOrFail($return->id);
-            if ($return->status !== 'pending') {
-                throw ValidationException::withMessages(['return' => 'This return has already been reviewed.']);
-            }
-
-            $item = PurchaseRequestItem::query()->lockForUpdate()->findOrFail($return->purchase_request_item_id);
-            if ($item->request()->value('status') !== 'issued') {
-                throw ValidationException::withMessages(['return' => 'This request is not awaiting a return.']);
-            }
-
-            if ($condition === 'usable') {
-                $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
-                if ($return->quantity > self::MAX_STOCK_QUANTITY - $product->quantity) {
-                    throw ValidationException::withMessages(['return' => 'The returned quantity exceeds stock capacity.']);
-                }
-                $product->increment('quantity', $return->quantity);
-                $movement = StockMovement::create([
-                    'product_id' => $product->id,
-                    'user_id' => $userId ?? auth()->id(),
-                    'type' => 'in',
-                    'quantity' => $return->quantity,
-                    'reason' => "Usable return for purchase request {$item->request->request_code}",
-                ]);
-            }
-
-            $item->increment('returned_quantity', $return->quantity);
-            $return->update([
-                'processed_by' => $userId ?? auth()->id(),
-                'condition' => $condition,
-                'status' => $condition === 'usable' ? 'accepted' : 'rejected',
-                'notes' => $notes,
-                'processed_at' => now(),
-            ]);
-
-            if ($item->request->items()->whereColumn('returned_quantity', '<', 'issued_quantity')->doesntExist()) {
-                $item->request->update(['status' => 'completed']);
+            if ($request->items()
+                ->whereColumn('returned_quantity', '<', 'issued_quantity')
+                ->doesntExist()
+            ) {
+                $request->update(['status' => 'completed']);
             }
 
             return $return;

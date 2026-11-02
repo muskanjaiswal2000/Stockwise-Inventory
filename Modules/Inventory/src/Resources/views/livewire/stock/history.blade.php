@@ -82,8 +82,8 @@
                     <tbody class="divide-y divide-slate-100 bg-white">
                         @forelse ($movements as $movement)
                             @php($isAdjustment = $movement->is_adjustment)
-                            @php($isReturned = str_starts_with((string) $movement->reason, 'Usable return for purchase request'))
-                            @php($isIssued = str_starts_with((string) $movement->reason, 'Issued for purchase request'))
+                            @php($isReturned = str_starts_with((string) $movement->reason, 'Returned for purchase request'))
+                            @php($isIssued = str_starts_with((string) $movement->reason, 'Assigned for request'))
                             <tr wire:key="movement-{{ $movement->id }}" class="transition hover:bg-indigo-50/40">
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
                                     <time datetime="{{ $movement->created_at->toIso8601String() }}">

@@ -6,12 +6,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Livewire\Component;
-use App\Models\User;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\QrCatalog;
 use Modules\Inventory\Models\PurchaseRequest;
 use Modules\Inventory\Models\PurchaseRequestItem;
-use Modules\Inventory\Models\PurchaseRequestReturn;
 use Modules\Inventory\Services\StockMovementService;
 
 class Movement extends Component
@@ -20,10 +18,6 @@ class Movement extends Component
     public $type = 'in';
     public $quantity = 1;
     public $reason = '';
-    public array $returnQuantities = [];
-    public array $returnConditions = [];
-    public array $returnNotes = [];
-    public array $reviewConditions = [];
     public bool $showQr = false;
     public bool $qrGenerated = false;
 
@@ -102,40 +96,22 @@ class Movement extends Component
         session()->flash('success', 'Purchase assigned successfully.');
     }
 
-    // public function rejectRequest(int $requestId, StockMovementService $service): void
-    // {
-    //     abort_unless(auth()->user()?->can('manage stock'), 403);
-    //     $service->rejectRequest(PurchaseRequest::findOrFail($requestId));
-    //     session()->flash('success', 'Purchase request rejected.');
-    // }
-
-    // public function issueRequest(int $requestId, StockMovementService $service): void
-    // {
-    //     abort_unless(auth()->user()?->can('manage stock'), 403);
-    //     $service->issueRequest(PurchaseRequest::findOrFail($requestId));
-    //     session()->flash('success', 'Products purchased and stock history updated.');
-    // }
-
     public function processReturn(int $itemId, StockMovementService $service): void
     {
-        // abort_unless(auth()->user()?->hasRole('admin'), 403);
-
         abort_unless(auth()->user()?->can('manage stock'), 403);
-        $item = \Modules\Inventory\Models\PurchaseRequestItem::findOrFail($itemId);
+
+        $item = PurchaseRequestItem::findOrFail($itemId);
+
         $quantity = $item->issued_quantity - $item->returned_quantity;
 
         if ($quantity < 1) {
-        session()->flash('error', 'Nothing left to return.');
-        return;
-    }
+            session()->flash('error', 'Nothing left to return.');
+            return;
+        }
 
-        $service->processReturn($item, $quantity, 'usable', null);
+        $service->processReturn($item, $quantity);
+
         session()->flash('success', 'Product returned successfully.');
-
-        // $condition = $this->returnConditions[$itemId] ?? 'usable';
-        // $notes = $this->returnNotes[$itemId] ?? null;
-        // $service->processReturn($item, $quantity, $condition, $notes);
-        // unset($this->returnQuantities[$itemId], $this->returnConditions[$itemId], $this->returnNotes[$itemId]);
     }
 
     public function assignRequest(int $requestId, StockMovementService $service): void
@@ -145,15 +121,6 @@ class Movement extends Component
         $service->assignRequest(PurchaseRequest::findOrFail($requestId));
 
         session()->flash('success', 'Product assigned successfully.');
-    }
-
-
-    public function reviewReturn(int $returnId, StockMovementService $service): void
-    {
-        abort_unless(auth()->user()?->can('manage stock'), 403);
-        $service->reviewReturn(PurchaseRequestReturn::findOrFail($returnId), 'usable');
-        session()->flash('success', 'Return reviewed and inventory updated when the item was usable.');
-        unset($this->reviewConditions[$returnId]);
     }
 
     public function render()
