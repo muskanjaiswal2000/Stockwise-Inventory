@@ -51,7 +51,6 @@ class DetailsEdit extends Component
         );
     }
 
-    // Prevent users from editing their own account here.
     abort_if(
         $this->staff->id === $user->id,
         403,
