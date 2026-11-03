@@ -19,8 +19,7 @@ class RolePermissionSeeder extends Seeder
         'manage stock', 'view stock',
         'manage staff permissions'
     ]);
-    
-    // Admin - All inventory + staff management (but not super_admin assignment)
+ 
     $adminRole = Role::findOrCreate('admin', 'web');
     $adminRole->givePermissionTo([
         'view inventory', 'view categories', 'manage categories',

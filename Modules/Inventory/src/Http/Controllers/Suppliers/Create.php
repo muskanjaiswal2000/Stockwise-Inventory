@@ -15,10 +15,50 @@ class Create extends Component
     protected function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:suppliers,email',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:2000',
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+            ],
+
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:suppliers,email',
+            ],
+
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^(?:\+91[\s-]?)?[6-9]\d{9}$/',
+            ],
+
+            'address' => [
+                'required',
+                'string',
+                'min:5',
+                'max:2000',
+            ],
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'name.required' => 'Supplier name is required.',
+            'name.min' => 'Supplier name must be at least 2 characters.',
+
+            'email.required' => 'Supplier email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already registered.',
+
+            'phone.required' => 'Supplier phone number is required.',
+            'phone.regex' => 'Please enter a valid 10-digit phone number',
+
+            'address.required' => 'Supplier address is required.',
+            'address.min' => 'Supplier address must be at least 5 characters.',
         ];
     }
 

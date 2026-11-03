@@ -17,7 +17,7 @@
     </div>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <form wire:submit="save" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form wire:submit="save" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div>
                 <label for="product-name" class="mb-2 block text-sm font-semibold text-slate-700">Name</label>
                 <input id="product-name" type="text" wire:model="name"

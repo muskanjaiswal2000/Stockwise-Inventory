@@ -28,13 +28,13 @@ class Edit extends Component
         return [
             'name' => 'required|string|max:255',
             'email' => [
-                'nullable',
+                'required',
                 'email',
                 'max:255',
                 Rule::unique('suppliers', 'email')->ignore($this->supplier->id),
             ],
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:2000',
+            'phone' => 'required|string|regex:/^(?:\+91[\s-]?)?[6-9]\d{9}$/',
+            'address' => 'required|string|max:2000',
         ];
     }
 
