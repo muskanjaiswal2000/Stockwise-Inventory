@@ -1,1 +1,1 @@
-a:3:{s:6:"_token";s:40:"95Ge0EK5hggM0l2kCFYnYBFKvT2yMt8uXmbm99Oi";s:6:"_flash";a:2:{s:3:"old";a:1:{i:0;s:6:"status";}s:3:"new";a:0:{}}s:9:"_previous";a:2:{s:3:"url";s:37:"http://127.0.0.1:8000/forgot-password";s:5:"route";s:16:"password.request";}}
+a:3:{s:6:"_token";s:40:"95Ge0EK5hggM0l2kCFYnYBFKvT2yMt8uXmbm99Oi";s:6:"_flash";a:2:{s:3:"old";a:0:{}s:3:"new";a:0:{}}s:9:"_previous";a:2:{s:3:"url";s:124:"http://127.0.0.1:8000/reset-password/2437a00cc07e598980916c02d034d4aca7020b3276cd8f45b9d88e74b162d592?email=amit%40gmail.com";s:5:"route";s:14:"password.reset";}}
