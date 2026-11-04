@@ -36,12 +36,13 @@ class Index extends Component
 
         $category->delete();
         session()->flash('success', 'Category deleted successfully.');
+        $this->redirect(route('inventory.categories.index'), navigate: false);
     }
 
     public function render()
     {
         $categories = Category::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search, fn($q) => $q->where('name', 'like', '%' . $this->search . '%'))
             ->when($this->sort === 'name_asc', fn($q) => $q->orderBy('name'))
             ->when($this->sort === 'name_desc', fn($q) => $q->orderByDesc('name'))
             ->when($this->sort === 'products_desc', fn($q) => $q->withCount('products')->orderByDesc('products_count'))

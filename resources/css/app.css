@@ -46,8 +46,8 @@
             @apply text-2xl;
         }
 
-        .inventory-page-heading > div,
-        .min-h-screen > div > div {
+        .inventory-page-heading>div,
+        .min-h-screen>div>div {
             max-width: 100%;
         }
 
@@ -58,15 +58,49 @@
 }
 
 @layer utilities {
+
     /* Keep existing module actions in the StockWise teal palette. */
-    .bg-indigo-600 { background-color: #0eaaa9 !important; }
-    .bg-indigo-700 { background-color: #087f7d !important; }
-    .text-indigo-600 { color: #078b8b !important; }
-    .text-indigo-700 { color: #087f7d !important; }
-    .border-indigo-100 { border-color: #c8f1f0 !important; }
-    .shadow-indigo-200 { --tw-shadow-color: rgb(153 224 224 / 0.45) !important; }
-    .from-indigo-600 { --tw-gradient-from: #0eaaa9 var(--tw-gradient-from-position) !important; }
-    .to-violet-600 { --tw-gradient-to: #087f7d var(--tw-gradient-to-position) !important; }
-    .bg-indigo-50 { background-color: #e8fbfb !important; }
-    .text-indigo-100 { color: #d8ffff !important; }
+    .bg-indigo-600 {
+        background-color: #0eaaa9 !important;
+    }
+
+    .bg-indigo-700 {
+        background-color: #087f7d !important;
+    }
+
+    .text-indigo-600 {
+        color: #078b8b !important;
+    }
+
+    .text-indigo-700 {
+        color: #087f7d !important;
+    }
+
+    .border-indigo-100 {
+        border-color: #c8f1f0 !important;
+    }
+
+    .shadow-indigo-200 {
+        --tw-shadow-color: rgb(153 224 224 / 0.45) !important;
+    }
+
+    .from-indigo-600 {
+        --tw-gradient-from: #0eaaa9 var(--tw-gradient-from-position) !important;
+    }
+
+    .to-violet-600 {
+        --tw-gradient-to: #087f7d var(--tw-gradient-to-position) !important;
+    }
+
+    .bg-indigo-50 {
+        background-color: #e8fbfb !important;
+    }
+
+    .text-indigo-100 {
+        color: #d8ffff !important;
+    }
+}
+
+[x-cloak] {
+    display: none !important;
 }

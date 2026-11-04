@@ -1,72 +1,72 @@
 <div
     class="relative"
-    wire:poll.10s
+    wire:poll.10s="checkForNewNotifications"
     x-data="{
-    lastCount: {{ (int) $unreadCount }},
-    audio: null,
-    audioUnlocked: false,
-    observer: null,
+        audio: null,
+        audioUnlocked: false,
+        notificationHandler: null,
 
-    init() {
-        this.audio = new Audio('/sounds/notification-chime.wav');
-        this.audio.preload = 'auto';
-        this.audio.volume = 0.7;
+        init() {
+            this.audio = new Audio('/sounds/notification-chime.wav');
+            this.audio.preload = 'auto';
+            this.audio.volume = 0.7;
 
-        const unlockAudio = async () => {
-            if (this.audioUnlocked) return;
+            const unlockAudio = async () => {
+                if (this.audioUnlocked) return;
 
-            try {
-                this.audio.muted = true;
-                await this.audio.play();
-                this.audio.pause();
-                this.audio.currentTime = 0;
-                this.audio.muted = false;
+                try {
+                    this.audio.muted = true;
+                    await this.audio.play();
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                    this.audio.muted = false;
 
-                this.audioUnlocked = true;
-                document.removeEventListener('click', unlockAudio);
-            } catch (error) {
-                console.error('Audio unlock failed:', error);
+                    this.audioUnlocked = true;
+                    document.removeEventListener('click', unlockAudio);
+
+                    console.log('Notification audio unlocked');
+                } catch (error) {
+                    console.error('Audio unlock failed:', error);
+                }
+            };
+
+            document.addEventListener('click', unlockAudio);
+
+            this.notificationHandler = () => {
+                console.log('NEW NOTIFICATION EVENT RECEIVED');
+
+                if (!this.audioUnlocked || !this.audio) {
+                    console.log('Audio is not unlocked yet.');
+                    return;
             }
+
+            this.audio.currentTime = 0;
+
+            this.audio.play().catch(error => {
+                console.error('Notification sound failed:', error);
+            });
         };
 
-        document.addEventListener('click', unlockAudio);
+            window.addEventListener(
+                'new-notification',
+                this.notificationHandler
+            );
+        },
 
-        this.observer = new MutationObserver(() => {
-            const badge = this.$el.querySelector('[data-unread-count]');
-
-            const currentCount = badge
-                ? parseInt(badge.textContent.trim(), 10) || 0
-                : 0;
-
-            if (currentCount > this.lastCount && this.audioUnlocked) {
-                this.audio.currentTime = 0;
-
-                this.audio.play().catch(error => {
-                    console.error('Notification sound failed:', error);
-                });
+        destroy() {
+            if (this.notificationHandler) {
+                window.removeEventListener(
+                    'new-notification',
+                    this.notificationHandler
+                );
             }
 
-            this.lastCount = currentCount;
-        });
-
-        this.observer.observe(this.$el, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    },
-
-    destroy() {
-        if (this.observer) {
-            this.observer.disconnect();
+            if (this.audio) {
+                this.audio.pause();
+                this.audio = null;
+            }
         }
-
-        if (this.audio) {
-            this.audio.pause();
-            this.audio = null;
-        }
-    }
-}"
+    }"
     x-on:click.outside="$wire.close()">
 
     {{-- Bell Button --}}

@@ -9,6 +9,15 @@ class BellDropdown extends Component
 {
     public bool $open = false;
 
+    public int $lastUnreadCount = 0;
+
+    public function mount(): void
+    {
+        $this->lastUnreadCount = Auth::user()
+            ->unreadNotifications()
+            ->count();
+    }
+
     public function toggle(): void
     {
         $this->open = ! $this->open;
@@ -17,6 +26,24 @@ class BellDropdown extends Component
     public function close(): void
     {
         $this->open = false;
+    }
+
+    public function checkForNewNotifications(): void
+    {
+        $currentCount = Auth::user()
+            ->unreadNotifications()
+            ->count();
+
+        if ($currentCount > $this->lastUnreadCount) {
+            $this->dispatch('new-notification');
+
+            logger()->info('New notification event dispatched', [
+                'previous_count' => $this->lastUnreadCount,
+                'current_count' => $currentCount,
+            ]);
+        }
+
+        $this->lastUnreadCount = $currentCount;
     }
 
     public function markAsRead(string $notificationId): void
@@ -42,20 +69,13 @@ class BellDropdown extends Component
     {
         $user = Auth::user();
 
-        $previousUnreadCount = session()->get('previous_unread_count', 0);
-        $currentUnreadCount = $user->unreadNotifications()->count();
-        
-        if ($currentUnreadCount > $previousUnreadCount) {
-            session()->put('new_notification', true);
-        } else {
-            session()->forget('new_notification');
-        }
-        
-        session()->put('previous_unread_count', $currentUnreadCount);
-
         return view('inventory::livewire.notifications.bell-dropdown', [
-            'notifications' => $user->notifications()->latest()->take(10)->get(),
-            'unreadCount' => $currentUnreadCount,
+            'notifications' => $user->notifications()
+                ->latest()
+                ->take(10)
+                ->get(),
+
+            'unreadCount' => $user->unreadNotifications()->count(),
         ]);
     }
 }
