@@ -4,6 +4,7 @@ namespace Modules\Inventory\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Modules\Inventory\Events\LowStockDetected;
+use Modules\Inventory\Events\CategoryCreated;
 use Modules\Inventory\Events\ProductCreatedOrUpdated;
 use Modules\Inventory\Events\StockMovementRecorded;
 use Modules\Inventory\Listeners\SendLowStockAlert;
@@ -22,6 +23,7 @@ class InventoryEventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         LowStockDetected::class => [SendLowStockAlert::class, StoreLowStockNotification::class],
+        CategoryCreated::class => [StoreCategoryNotification::class],
         ProductCreatedOrUpdated::class => [SendProductChangeNotification::class, StoreProductNotification::class],
         StockMovementRecorded::class => [SendStockMovementNotification::class, StoreStockMovementNotification::class],
     ];

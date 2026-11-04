@@ -16,6 +16,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
+
     <body class="font-sans antialiased text-slate-700">
         <div class="min-h-screen bg-[#eefbfd]">
             <livewire:layout.navigation />
@@ -36,5 +37,78 @@
         </div>
 
         @livewireScripts
+
+        <!-- Automatically dismiss success messages -->
+        <script>
+            (() => {
+                const initializeSuccessAlerts = () => {
+                    const processedAlerts = new WeakSet();
+
+                    const dismissAlert = (alert) => {
+                        if (processedAlerts.has(alert)) {
+                            return;
+                        }
+
+                        processedAlerts.add(alert);
+
+                        setTimeout(() => {
+                            if (!alert.isConnected) {
+                                return;
+                            }
+
+                            alert.style.transition = 'opacity 300ms ease, transform 300ms ease';
+                            alert.style.opacity = '0';
+                            alert.style.transform = 'translateY(-5px)';
+
+                            setTimeout(() => {
+                                alert.remove();
+                            }, 350);
+
+                        }, 3000);
+                    };
+
+                    const findSuccessAlerts = (container) => {
+                        if (container.nodeType !== Node.ELEMENT_NODE) {
+                            return;
+                        }
+
+                        if (
+                            container.matches('div.bg-emerald-50, div[role="status"]')
+                        ) {
+                            dismissAlert(container);
+                        }
+
+                        container.querySelectorAll(
+                            'div.bg-emerald-50, div[role="status"]'
+                        ).forEach(dismissAlert);
+                    };
+
+                    findSuccessAlerts(document.body);
+
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            mutation.addedNodes.forEach((node) => {
+                                findSuccessAlerts(node);
+                            });
+                        });
+                    });
+
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener(
+                        'DOMContentLoaded',
+                        initializeSuccessAlerts,
+                        { once: true }
+                    );
+                } else {
+                    initializeSuccessAlerts();
+                }
+            })();
+        </script>
     </body>
 </html>

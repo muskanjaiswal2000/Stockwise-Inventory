@@ -5,6 +5,7 @@ namespace Modules\Inventory\Http\Controllers\Categories;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Modules\Inventory\Models\Category;
+use Modules\Inventory\Events\CategoryCreated;
 
 class Create extends Component
 {
@@ -25,11 +26,13 @@ class Create extends Component
 
         $this->validate();
 
-        Category::create([
+        $category = Category::create([
             'name' => $this->name,
             'slug' => Str::slug($this->name),
             'description' => $this->description,
         ]);
+
+        event(new CategoryCreated($category));
 
         session()->flash('success', 'Category created successfully.');
         return $this->redirect(route('inventory.categories.index'), navigate: true);

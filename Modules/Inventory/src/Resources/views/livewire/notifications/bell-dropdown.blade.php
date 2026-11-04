@@ -191,6 +191,8 @@
                         ⚙
                         @elseif ($icon === 'shopping-cart')
                         🛒
+                        @elseif ($icon === 'folder-plus')
+                        🗂️
                         @else
                         🔔
                         @endif
