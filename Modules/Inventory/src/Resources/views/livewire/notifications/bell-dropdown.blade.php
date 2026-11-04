@@ -2,71 +2,71 @@
     class="relative"
     wire:poll.10s
     x-data="{
-        lastCount: {{ (int) $unreadCount }},
-        audio: null,
-        audioUnlocked: false,
-        observer: null,
+    lastCount: {{ (int) $unreadCount }},
+    audio: null,
+    audioUnlocked: false,
+    observer: null,
 
-        async init() {
-            this.audio = new Audio('/sounds/notification-chime.wav');
-            this.audio.preload = 'auto';
-            this.audio.volume = 0.7;
+    init() {
+        this.audio = new Audio('/sounds/notification-chime.wav');
+        this.audio.preload = 'auto';
+        this.audio.volume = 0.7;
 
-            const unlockAudio = async () => {
-                if (this.audioUnlocked) return;
+        const unlockAudio = async () => {
+            if (this.audioUnlocked) return;
 
-                try {
-                    this.audio.muted = true;
-                    await this.audio.play();
-                    this.audio.pause();
-                    this.audio.currentTime = 0;
-                    this.audio.muted = false;
-
-                    this.audioUnlocked = true;
-                    document.removeEventListener('click', unlockAudio);
-                } catch (error) {
-                    console.log('Notification audio is waiting for user interaction.');
-                }
-            };
-
-            document.addEventListener('click', unlockAudio);
-
-            this.observer = new MutationObserver(() => {
-                const badge = this.$el.querySelector('[data-unread-count]');
-
-                const currentCount = badge
-                    ? parseInt(badge.textContent.trim(), 10) || 0
-                    : 0;
-
-                if (currentCount > this.lastCount && this.audioUnlocked) {
-                    this.audio.currentTime = 0;
-
-                    this.audio.play().catch(error => {
-                        console.error('Notification sound failed:', error);
-                    });
-                }
-
-                this.lastCount = currentCount;
-            });
-
-            this.observer.observe(this.$el, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-        },
-
-        destroy() {
-            if (this.observer) {
-                this.observer.disconnect();
-            }
-
-            if (this.audio) {
+            try {
+                this.audio.muted = true;
+                await this.audio.play();
                 this.audio.pause();
-                this.audio = null;
+                this.audio.currentTime = 0;
+                this.audio.muted = false;
+
+                this.audioUnlocked = true;
+                document.removeEventListener('click', unlockAudio);
+            } catch (error) {
+                console.error('Audio unlock failed:', error);
             }
+        };
+
+        document.addEventListener('click', unlockAudio);
+
+        this.observer = new MutationObserver(() => {
+            const badge = this.$el.querySelector('[data-unread-count]');
+
+            const currentCount = badge
+                ? parseInt(badge.textContent.trim(), 10) || 0
+                : 0;
+
+            if (currentCount > this.lastCount && this.audioUnlocked) {
+                this.audio.currentTime = 0;
+
+                this.audio.play().catch(error => {
+                    console.error('Notification sound failed:', error);
+                });
+            }
+
+            this.lastCount = currentCount;
+        });
+
+        this.observer.observe(this.$el, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    },
+
+    destroy() {
+        if (this.observer) {
+            this.observer.disconnect();
         }
-    }"
+
+        if (this.audio) {
+            this.audio.pause();
+            this.audio = null;
+        }
+    }
+}"
     x-on:click.outside="$wire.close()">
 
     {{-- Bell Button --}}
