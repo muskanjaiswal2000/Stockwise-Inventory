@@ -1,72 +1,5 @@
 <div
     class="relative"
-    wire:poll.10s="checkForNewNotifications"
-    x-data="{
-        audio: null,
-        audioUnlocked: false,
-        notificationHandler: null,
-
-        init() {
-            this.audio = new Audio('/sounds/notification-chime.wav');
-            this.audio.preload = 'auto';
-            this.audio.volume = 0.7;
-
-            const unlockAudio = async () => {
-                if (this.audioUnlocked) return;
-
-                try {
-                    this.audio.muted = true;
-                    await this.audio.play();
-                    this.audio.pause();
-                    this.audio.currentTime = 0;
-                    this.audio.muted = false;
-
-                    this.audioUnlocked = true;
-                    document.removeEventListener('click', unlockAudio);
-
-                    console.log('Notification audio unlocked');
-                } catch (error) {
-                    console.error('Audio unlock failed:', error);
-                }
-            };
-
-            document.addEventListener('click', unlockAudio);
-
-            this.notificationHandler = () => {
-                console.log('NEW NOTIFICATION EVENT RECEIVED');
-
-                if (!this.audioUnlocked || !this.audio) {
-                    console.log('Audio is not unlocked yet.');
-                    return;
-            }
-
-            this.audio.currentTime = 0;
-
-            this.audio.play().catch(error => {
-                console.error('Notification sound failed:', error);
-            });
-        };
-
-            window.addEventListener(
-                'new-notification',
-                this.notificationHandler
-            );
-        },
-
-        destroy() {
-            if (this.notificationHandler) {
-                window.removeEventListener(
-                    'new-notification',
-                    this.notificationHandler
-                );
-            }
-
-            if (this.audio) {
-                this.audio.pause();
-                this.audio = null;
-            }
-        }
-    }"
     x-on:click.outside="$wire.close()">
 
     {{-- Bell Button --}}
@@ -96,25 +29,25 @@
         <span
             data-unread-count
             style="
-                    position: absolute !important;
-                    top: -6px !important;
-                    right: -6px !important;
-                    z-index: 999 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    min-width: 19px;
-                    height: 19px;
-                    padding: 0 4px;
-                    border: 2px solid white;
-                    border-radius: 9999px;
-                    background-color: #ef4444;
-                    color: white;
-                    font-size: 10px;
-                    font-weight: 700;
-                    line-height: 1;
-                    pointer-events: none;
-                ">
+                position: absolute !important;
+                top: -6px !important;
+                right: -6px !important;
+                z-index: 999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                min-width: 19px;
+                height: 19px;
+                padding: 0 4px;
+                border: 2px solid white;
+                border-radius: 9999px;
+                background-color: #ef4444;
+                color: white;
+                font-size: 10px;
+                font-weight: 700;
+                line-height: 1;
+                pointer-events: none;
+            ">
             {{ $unreadCount }}
         </span>
         @endif
@@ -158,43 +91,43 @@
                 @forelse ($notifications as $notification)
 
                 @php
-                $data = $notification->data;
-                $isUnread = is_null($notification->read_at);
-                $icon = $data['icon'] ?? 'bell';
+                    $data = $notification->data;
+                    $isUnread = is_null($notification->read_at);
+                    $icon = $data['icon'] ?? 'bell';
                 @endphp
 
                 <div
                     wire:key="notification-{{ $notification->id }}"
                     class="relative flex gap-3 border-b border-gray-100 px-5 py-4 transition-colors duration-200
-                                {{ $isUnread
-                                    ? 'border-l-4 border-l-indigo-500 bg-indigo-50 hover:bg-indigo-100'
-                                    : 'border-l-4 border-l-transparent bg-white hover:bg-gray-50'
-                                }}">
+                        {{ $isUnread
+                            ? 'border-l-4 border-l-indigo-500 bg-indigo-50 hover:bg-indigo-100'
+                            : 'border-l-4 border-l-transparent bg-white hover:bg-gray-50'
+                        }}">
 
                     {{-- Notification Icon --}}
                     <div
                         class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-                                    {{ $isUnread
-                                        ? 'bg-indigo-100 text-indigo-600'
-                                        : 'bg-gray-100 text-gray-500'
-                                    }}">
+                            {{ $isUnread
+                                ? 'bg-indigo-100 text-indigo-600'
+                                : 'bg-gray-100 text-gray-500'
+                            }}">
 
                         @if ($icon === 'alert-triangle')
-                        ⚠
+                            ⚠
                         @elseif ($icon === 'truck')
-                        🚚
+                            🚚
                         @elseif ($icon === 'package-plus' || $icon === 'package')
-                        📦
+                            📦
                         @elseif ($icon === 'package-minus')
-                        📤
+                            📤
                         @elseif ($icon === 'sliders-horizontal')
-                        ⚙
+                            ⚙
                         @elseif ($icon === 'shopping-cart')
-                        🛒
+                            🛒
                         @elseif ($icon === 'folder-plus')
-                        🗂️
+                            🗂️
                         @else
-                        🔔
+                            🔔
                         @endif
                     </div>
 
@@ -205,10 +138,10 @@
 
                             <h4
                                 class="truncate text-sm
-                                            {{ $isUnread
-                                                ? 'font-bold text-gray-900'
-                                                : 'font-medium text-gray-700'
-                                            }}">
+                                    {{ $isUnread
+                                        ? 'font-bold text-gray-900'
+                                        : 'font-medium text-gray-700'
+                                    }}">
                                 {{ $data['title'] ?? 'Notification' }}
                             </h4>
 
@@ -223,7 +156,7 @@
 
                         <p
                             class="mt-1 break-words text-sm leading-5
-                                        {{ $isUnread ? 'text-gray-700' : 'text-gray-500' }}">
+                                {{ $isUnread ? 'text-gray-700' : 'text-gray-500' }}">
                             {{ $data['message'] ?? '' }}
                         </p>
 
