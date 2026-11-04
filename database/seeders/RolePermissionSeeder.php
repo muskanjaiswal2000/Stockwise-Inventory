@@ -46,7 +46,6 @@ class RolePermissionSeeder extends Seeder
         'manage stock', // Stock movement
         'view stock'
     ]);
-    // Note: Remove any permissions you don't want staff to have
     }
 }    
 

@@ -11,7 +11,6 @@ class PermissionsPage extends Component
    
     public function delete(int $staffId): void
     {
-        // Only Super Admin can delete Staff accounts.
         abort_unless(
             auth()->user()?->hasRole('super_admin'),
             403,
@@ -20,7 +19,6 @@ class PermissionsPage extends Component
 
         $staff = User::role('staff')->findOrFail($staffId);
 
-        // Prevent deleting your own account.
         abort_if(
             auth()->id() === $staff->id,
             403,
