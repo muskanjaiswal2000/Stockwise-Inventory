@@ -8,7 +8,10 @@ use Modules\Inventory\Events\ProductCreatedOrUpdated;
 use Modules\Inventory\Events\StockMovementRecorded;
 use Modules\Inventory\Listeners\SendLowStockAlert;
 use Modules\Inventory\Listeners\SendProductChangeNotification;
+use Modules\Inventory\Listeners\StoreLowStockNotification;
 use Modules\Inventory\Listeners\SendStockMovementNotification;
+use Modules\Inventory\Listeners\StoreProductNotification;
+use Modules\Inventory\Listeners\StoreStockMovementNotification;
 
 class InventoryEventServiceProvider extends ServiceProvider
 {
@@ -18,9 +21,9 @@ class InventoryEventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        LowStockDetected::class => [SendLowStockAlert::class],
-        ProductCreatedOrUpdated::class => [SendProductChangeNotification::class],
-        StockMovementRecorded::class => [SendStockMovementNotification::class],
+        LowStockDetected::class => [SendLowStockAlert::class, StoreLowStockNotification::class],
+        ProductCreatedOrUpdated::class => [SendProductChangeNotification::class, StoreProductNotification::class],
+        StockMovementRecorded::class => [SendStockMovementNotification::class, StoreStockMovementNotification::class],
     ];
 
     /**

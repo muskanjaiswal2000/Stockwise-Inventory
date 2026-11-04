@@ -10,11 +10,17 @@ use Illuminate\Validation\ValidationException;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\PurchaseRequest;
 use Modules\Inventory\Models\QrCatalog;
+use App\Models\User;
+use Modules\Inventory\Notifications\InventoryNotification;
+use Modules\Inventory\Services\NotificationRecipients;
 
 class PublicCheckoutSubmit
 {
-    public function __invoke(Request $request, string $token): RedirectResponse
-    {
+    public function __invoke(
+        Request $request,
+        string $token,
+        NotificationRecipients $recipients
+    ): RedirectResponse {
         abort_unless(QrCatalog::where('token', $token)->exists(), 404);
 
         $validated = $request->validate([
@@ -31,7 +37,7 @@ class PublicCheckoutSubmit
             ]);
         }
 
-        $purchaseRequest = DB::transaction(function () use ($validated, $cart) {
+        $result = DB::transaction(function () use ($validated, $cart) {
 
             $products = Product::query()
                 ->whereIn('id', array_keys($cart))
@@ -50,7 +56,6 @@ class PublicCheckoutSubmit
             $validatedCart = [];
 
             foreach ($cart as $productId => $quantity) {
-
                 $quantity = filter_var($quantity, FILTER_VALIDATE_INT);
 
                 if ($quantity === false || $quantity < 1) {
@@ -79,7 +84,7 @@ class PublicCheckoutSubmit
                     'cart' => $stockErrors,
                 ]);
             }
-            
+
             $purchaseRequest = PurchaseRequest::create([
                 'request_code' => 'PR-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6)),
                 'customer_name' => $validated['customerName'],
@@ -95,8 +100,35 @@ class PublicCheckoutSubmit
                 ]);
             }
 
-            return $purchaseRequest;
+            return [
+                'purchaseRequest' => $purchaseRequest,
+                'validatedCart' => $validatedCart,
+            ];
         });
+
+        $purchaseRequest = $result['purchaseRequest'];
+        $validatedCart = $result['validatedCart'];
+
+        $adminUsers = User::whereIn('email', $recipients->all())->get();
+
+        $productCount = count($validatedCart);
+
+        foreach ($adminUsers as $admin) {
+            $admin->notify(new InventoryNotification(
+                title: 'New Product Request',
+                message: "{$purchaseRequest->customer_name} submitted request {$purchaseRequest->request_code} containing {$productCount} " . ($productCount === 1 ? 'product' : 'products') . '.',
+                icon: 'shopping-cart',
+                extra: [
+                    'type' => 'new_product_request',
+                    'request_id' => $purchaseRequest->id,
+                    'request_code' => $purchaseRequest->request_code,
+                    'customer_name' => $purchaseRequest->customer_name,
+                    'customer_email' => $purchaseRequest->customer_email,
+                    'product_count' => $productCount,
+                    'submitted_at' => now()->toDateTimeString(),
+                ],
+            ));
+        }
 
         $request->session()->forget($key);
 

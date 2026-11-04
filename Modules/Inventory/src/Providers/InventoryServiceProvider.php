@@ -21,6 +21,7 @@ use Modules\Inventory\Http\Controllers\Staff\Create as StaffCreate;
 use Modules\Inventory\Http\Controllers\Suppliers\Create as SupplierCreate;
 use Modules\Inventory\Http\Controllers\Suppliers\Edit as SupplierEdit;
 use Modules\Inventory\Http\Controllers\Suppliers\Index as SupplierIndex;
+use Modules\Inventory\Http\Controllers\Notifications\BellDropdown;
 
 class InventoryServiceProvider extends ServiceProvider
 {
@@ -211,5 +212,10 @@ class InventoryServiceProvider extends ServiceProvider
         Livewire::component('modules.inventory.livewire.stock.adjustment', StockAdjustment::class);
         Livewire::component('modules.inventory.livewire.dashboard', InventoryDashboard::class);
         Livewire::component('modules.inventory.livewire.staff.create', StaffCreate::class);
+        Livewire::component('modules.inventory.livewire.notifications.bell-dropdown', BellDropdown::class);
+    
+        \Illuminate\Support\Facades\Blade::component('inventory::components.notifications.bell', \Modules\Inventory\View\Components\Notifications\Bell::class);
+    
+        \Illuminate\Support\Facades\Blade::component('inventory::components.notifications.bell-dropdown', \Modules\Inventory\View\Components\Notifications\BellDropdown::class);
     }
 }

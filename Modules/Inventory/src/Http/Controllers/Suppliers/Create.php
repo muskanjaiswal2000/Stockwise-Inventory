@@ -4,6 +4,9 @@ namespace Modules\Inventory\Http\Controllers\Suppliers;
 
 use Livewire\Component;
 use Modules\Inventory\Models\Supplier;
+use App\Models\User;
+use Modules\Inventory\Notifications\InventoryNotification;
+use Modules\Inventory\Services\NotificationRecipients;
 
 class Create extends Component
 {
@@ -66,7 +69,25 @@ class Create extends Component
     {
         abort_unless(auth()->user()?->can('manage suppliers'), 403);
 
-        Supplier::create($this->validate());
+        $supplier = Supplier::create($this->validate());
+
+        $emails = app(NotificationRecipients::class)->all();
+
+        $users = User::query()
+            ->whereIn('email', $emails)
+            ->get();
+
+        foreach ($users as $user) {
+            $user->notify(new InventoryNotification(
+                title: 'Supplier Added',
+                message: "New supplier {$supplier->name} was added.",
+                icon: 'truck',
+                extra: [
+                    'supplier_id' => $supplier->id,
+                    'type' => 'supplier_created',
+                ],
+            ));
+        }
 
         session()->flash('success', 'Supplier created successfully.');
         $this->redirect(route('inventory.suppliers.index'), navigate: true);

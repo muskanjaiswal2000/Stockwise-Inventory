@@ -12,7 +12,7 @@ new class extends Component {
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="relative z-30">
+<nav x-data="{ open: false }" class="relative z-[100]">
     <div class="flex h-16 items-center justify-between bg-[#073f43] px-4 text-white lg:hidden">
         <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#19b9c2] shadow-lg shadow-black/20">
@@ -115,5 +115,10 @@ new class extends Component {
                 </button>
             </form>
         </div>
+    </div>
+    
+    {{-- Notification Bell --}}
+    <div class="fixed right-16 top-3 z-[200] rounded-full bg-white shadow lg:right-6 lg:top-4 lg:bg-transparent lg:shadow-none">
+        <livewire:modules.inventory.livewire.notifications.bell-dropdown />
     </div>
 </nav>
